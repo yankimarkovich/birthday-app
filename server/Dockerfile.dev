@@ -1,0 +1,16 @@
+# Development Dockerfile for Express Server
+FROM node:20-alpine
+
+# Install curl (needed by docker-compose healthcheck)
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["npm", "run", "dev"]
