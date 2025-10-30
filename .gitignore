@@ -17,8 +17,10 @@ dist/
 build/
 *.tsbuildinfo
 
-# IDE
-.vscode/
+# IDE - Personal settings only
+.vscode/*
+!.vscode/settings.json       # ← Share settings
+!.vscode/extensions.json     # ← Share recommended extensions
 .idea/
 *.swp
 *.swo
