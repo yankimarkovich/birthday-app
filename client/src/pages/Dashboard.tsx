@@ -14,10 +14,21 @@ import { DayButton } from 'react-day-picker';
 import React from 'react';
 import { useMemo, useState } from 'react';
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
+import type { Birthday } from '@/types';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [view, setView] = useState<'upcoming' | 'calendar' | 'all'>('upcoming');
+
+  // Dialog state management
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
+
+  // Hooks must be at top level
+  const { toast } = useToast();
+  const del = useDeleteBirthday();
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,27 +53,86 @@ export default function Dashboard() {
             <Toggle value="calendar" current={view} onChange={setView} label="Calendar" />
             <Toggle value="all" current={view} onChange={setView} label="All" />
           </div>
-          <AddBirthdayDialog />
+
+          {/* Dashboard owns the Add button */}
+          <Button onClick={() => setAddDialogOpen(true)} className="font-medium" size="default">
+            Add Birthday
+          </Button>
         </div>
 
         {view === 'upcoming' && (
           <section className="space-y-4">
-            <UpcomingList />
+            <UpcomingList
+              onEdit={(birthday) => {
+                setSelectedBirthday(birthday);
+                setEditDialogOpen(true);
+              }}
+              onDelete={(birthday) => {
+                setSelectedBirthday(birthday);
+                setDeleteDialogOpen(true);
+              }}
+            />
           </section>
         )}
 
         {view === 'calendar' && (
           <section className="space-y-4">
-            <CalendarView />
+            <CalendarView
+              onEdit={(birthday) => {
+                setSelectedBirthday(birthday);
+                setEditDialogOpen(true);
+              }}
+              onDelete={(birthday) => {
+                setSelectedBirthday(birthday);
+                setDeleteDialogOpen(true);
+              }}
+            />
           </section>
         )}
 
         {view === 'all' && (
           <section className="space-y-4">
-            <BirthdayList />
+            <BirthdayList
+              onEdit={(birthday) => {
+                setSelectedBirthday(birthday);
+                setEditDialogOpen(true);
+              }}
+              onDelete={(birthday) => {
+                setSelectedBirthday(birthday);
+                setDeleteDialogOpen(true);
+              }}
+            />
           </section>
         )}
       </main>
+
+      {/* Dialogs controlled by Dashboard */}
+      <AddBirthdayDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
+
+      {selectedBirthday && (
+        <>
+          <EditBirthdayDialog
+            open={editDialogOpen}
+            onOpenChange={setEditDialogOpen}
+            birthday={selectedBirthday}
+          />
+
+          <ConfirmDeleteDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            title="Delete Birthday"
+            description={`Delete ${selectedBirthday.name}? This action cannot be undone.`}
+            onConfirm={async () => {
+              try {
+                await del.mutateAsync(selectedBirthday._id);
+                toast({ title: 'Deleted', description: `${selectedBirthday.name} removed` });
+              } catch {
+                toast({ title: 'Error', description: 'Failed to delete' });
+              }
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -95,7 +165,13 @@ function Toggle({
   );
 }
 
-function UpcomingList() {
+function UpcomingList({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: (birthday: Birthday) => void;
+  onDelete: (birthday: Birthday) => void;
+}) {
   const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useBirthdays();
   const sendWish = useSendWish();
@@ -103,6 +179,7 @@ function UpcomingList() {
   if (isLoading) {
     return <Skeleton className="h-32 w-full rounded-xl" />;
   }
+
   if (isError || !data) {
     return (
       <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
@@ -159,10 +236,21 @@ function UpcomingList() {
                 )}
               </div>
               <div className="text-base text-muted-foreground mt-1">
-                {format(new Date(b.date), 'MMM d')} • <Countdown target={b.next} />
+                {format(new Date(b.date), 'MMM d')} •{' '}
+                <span className="font-bold text-foreground">
+                  <Countdown target={b.next} />
+                </span>
               </div>
             </div>
             <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => onEdit(b)}
+                className="font-medium"
+              >
+                Edit
+              </Button>
               <Button
                 variant="default"
                 size="default"
@@ -179,6 +267,14 @@ function UpcomingList() {
               >
                 Send Wish
               </Button>
+              <Button
+                variant="destructive"
+                size="default"
+                onClick={() => onDelete(b)}
+                className="font-medium"
+              >
+                Delete
+              </Button>
             </div>
           </li>
         );
@@ -187,14 +283,22 @@ function UpcomingList() {
   );
 }
 
-function BirthdayList() {
+function BirthdayList({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: (birthday: Birthday) => void;
+  onDelete: (birthday: Birthday) => void;
+}) {
   const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useBirthdays();
   const sendWish = useSendWish();
-  const del = useDeleteBirthday();
 
-  if (isLoading) return <Skeleton className="h-32 w-full rounded-xl" />;
-  if (isError || !data)
+  if (isLoading) {
+    return <Skeleton className="h-32 w-full rounded-xl" />;
+  }
+
+  if (isError || !data) {
     return (
       <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
         <p className="text-base font-medium">Failed to load birthdays.</p>
@@ -206,7 +310,9 @@ function BirthdayList() {
         </button>
       </div>
     );
-  if (data.count === 0)
+  }
+
+  if (data.count === 0) {
     return (
       <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
         <p className="text-lg text-muted-foreground font-medium">
@@ -214,6 +320,7 @@ function BirthdayList() {
         </p>
       </div>
     );
+  }
 
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
@@ -229,7 +336,14 @@ function BirthdayList() {
             </div>
           </div>
           <div className="flex gap-3">
-            <EditBirthdayDialog birthday={b} />
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => onEdit(b)}
+              className="font-medium"
+            >
+              Edit
+            </Button>
             <Button
               variant="default"
               size="default"
@@ -245,18 +359,14 @@ function BirthdayList() {
             >
               Send Wish
             </Button>
-            <ConfirmDeleteDialog
-              title="Delete"
-              description={`Delete ${b.name}? This action cannot be undone.`}
-              onConfirm={async () => {
-                try {
-                  await del.mutateAsync(b._id);
-                  toast({ title: 'Deleted', description: `${b.name} removed` });
-                } catch {
-                  toast({ title: 'Error', description: 'Failed to delete' });
-                }
-              }}
-            />
+            <Button
+              variant="destructive"
+              size="default"
+              onClick={() => onDelete(b)}
+              className="font-medium"
+            >
+              Delete
+            </Button>
           </div>
         </li>
       ))}
@@ -264,11 +374,16 @@ function BirthdayList() {
   );
 }
 
-function CalendarView() {
+function CalendarView({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: (birthday: Birthday) => void;
+  onDelete: (birthday: Birthday) => void;
+}) {
   const { data, isLoading, isError, refetch } = useBirthdays();
   const { toast } = useToast();
   const sendWish = useSendWish();
-  const del = useDeleteBirthday();
   const [selected, setSelected] = useState<Date | undefined>(new Date());
 
   // Source list for hooks to avoid conditional hook calls
@@ -279,7 +394,6 @@ function CalendarView() {
     const map = new Map<string, typeof source>();
     for (const b of source) {
       const d = new Date(b.date);
-      // Use only month and day for the key, so we can match across years
       const key = `${d.getMonth()}-${d.getDate()}`;
       const arr = map.get(key) || [];
       arr.push(b);
@@ -289,7 +403,6 @@ function CalendarView() {
   }, [source]);
 
   const datesWithBirthdays = useMemo(() => {
-    // normalize to the current year for highlight modifiers
     return source.map(
       (b) =>
         new Date(new Date().getFullYear(), new Date(b.date).getMonth(), new Date(b.date).getDate())
@@ -306,8 +419,11 @@ function CalendarView() {
     return m;
   }, [source]);
 
-  if (isLoading) return <Skeleton className="h-96 w-full rounded-xl" />;
-  if (isError || !data)
+  if (isLoading) {
+    return <Skeleton className="h-96 w-full rounded-xl" />;
+  }
+
+  if (isError || !data) {
     return (
       <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
         <p className="text-base font-medium">Failed to load birthdays.</p>
@@ -319,20 +435,20 @@ function CalendarView() {
         </button>
       </div>
     );
+  }
 
   const modifiers = { hasBirthday: datesWithBirthdays } as const;
 
   const selectedList = (() => {
     if (!selected) return [] as typeof source;
-    // Use only month and day for lookup (same as byDay map)
     const k = `${selected.getMonth()}-${selected.getDate()}`;
     return byDay.get(k) || [];
   })();
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-      {/* Compact calendar container with better proportions */}
-      <div className="bg-card border-2 border-border rounded-xl shadow-lg overflow-hidden">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start">
+      {/* Calendar container - natural size, sticky */}
+      <div className="bg-card border-2 border-border rounded-xl shadow-lg overflow-hidden lg:sticky lg:top-8">
         <div className="p-6">
           <Calendar
             mode="single"
@@ -378,7 +494,6 @@ function CalendarView() {
                       (props.className as string) || ''
                     }`}
                   >
-                    {/* Day number is rendered by DayPicker as children */}
                     {props.children}
                     {count === 1 && (
                       <span
@@ -405,7 +520,7 @@ function CalendarView() {
         </div>
       </div>
 
-      {/* Selected day details */}
+      {/* Selected day details - natural height with max-height scroll */}
       <div className="space-y-4">
         <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-border rounded-xl p-6 shadow-lg">
           <h3 className="text-xl font-bold text-foreground">
@@ -420,54 +535,62 @@ function CalendarView() {
             </p>
           </div>
         ) : (
-          <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
-            {selectedList.map((b) => (
-              <li
-                key={b._id}
-                className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
-              >
-                <div>
-                  <div className="text-foreground font-semibold text-lg">{b.name}</div>
-                  <div className="text-base text-muted-foreground mt-1">
-                    {format(new Date(b.date), 'PPP')}
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    variant="default"
-                    size="default"
-                    disabled={!isToday(b.date)}
-                    onClick={async () => {
-                      try {
-                        await sendWish.mutateAsync(b._id);
-                        toast({
-                          title: 'Sent 🎉',
-                          description: `Wished ${b.name} a happy birthday`,
-                        });
-                      } catch {
-                        toast({ title: 'Error', description: 'Failed to send wish' });
-                      }
-                    }}
-                    className="font-medium"
+          <div className="bg-card border-2 border-border rounded-xl shadow-lg overflow-hidden">
+            <div className="max-h-[470px] overflow-y-auto">
+              <ul className="divide-y-2 divide-border">
+                {selectedList.map((b) => (
+                  <li
+                    key={b._id}
+                    className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
                   >
-                    Send Wish
-                  </Button>
-                  <ConfirmDeleteDialog
-                    title="Delete"
-                    description={`Delete ${b.name}? This action cannot be undone.`}
-                    onConfirm={async () => {
-                      try {
-                        await del.mutateAsync(b._id);
-                        toast({ title: 'Deleted', description: `${b.name} removed` });
-                      } catch {
-                        toast({ title: 'Error', description: 'Failed to delete' });
-                      }
-                    }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <div>
+                      <div className="text-foreground font-semibold text-lg">{b.name}</div>
+                      <div className="text-base text-muted-foreground mt-1">
+                        {format(new Date(b.date), 'PPP')}
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="default"
+                        onClick={() => onEdit(b)}
+                        className="font-medium"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="default"
+                        disabled={!isToday(b.date)}
+                        onClick={async () => {
+                          try {
+                            await sendWish.mutateAsync(b._id);
+                            toast({
+                              title: 'Sent 🎉',
+                              description: `Wished ${b.name} a happy birthday`,
+                            });
+                          } catch {
+                            toast({ title: 'Error', description: 'Failed to send wish' });
+                          }
+                        }}
+                        className="font-medium"
+                      >
+                        Send Wish
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="default"
+                        onClick={() => onDelete(b)}
+                        className="font-medium"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         )}
       </div>
     </div>

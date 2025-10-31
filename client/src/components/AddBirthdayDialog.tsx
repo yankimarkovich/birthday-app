@@ -1,15 +1,8 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,8 +19,14 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function AddBirthdayDialog() {
-  const [open, setOpen] = useState(false);
+// NEW: Accept open and onOpenChange as props (controlled component)
+export default function AddBirthdayDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const { toast } = useToast();
   const createBirthday = useCreateBirthday();
 
@@ -43,17 +42,15 @@ export default function AddBirthdayDialog() {
       await createBirthday.mutateAsync(values);
       toast({ title: 'Added', description: `Created birthday for ${values.name}` });
       reset();
-      setOpen(false);
+      onOpenChange(false); // Close via prop
     } catch {
       toast({ title: 'Error', description: 'Failed to create birthday' });
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Add Birthday</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* REMOVED: DialogTrigger - Dashboard will render the button */}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Birthday</DialogTitle>
@@ -74,7 +71,12 @@ export default function AddBirthdayDialog() {
 
           <div className="space-y-2">
             <Label htmlFor="email">Email (optional)</Label>
-            <Input id="email" type="email" placeholder="friend@example.com" {...register('email')} />
+            <Input
+              id="email"
+              type="email"
+              placeholder="friend@example.com"
+              {...register('email')}
+            />
             {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
           </div>
 
@@ -85,12 +87,17 @@ export default function AddBirthdayDialog() {
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea id="notes" placeholder="Favorite cake, gift ideas…" rows={3} {...register('notes')} />
+            <Textarea
+              id="notes"
+              placeholder="Favorite cake, gift ideas…"
+              rows={3}
+              {...register('notes')}
+            />
             {errors.notes && <p className="text-sm text-red-500">{errors.notes.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>

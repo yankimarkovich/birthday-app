@@ -11,7 +11,9 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "createTestData": "node scripts/create-test-data.js",
+    "deleteTestData": "node scripts/delete-test-data.js"
   },
   "keywords": [
     "birthday",

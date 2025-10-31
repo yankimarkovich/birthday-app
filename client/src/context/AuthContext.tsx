@@ -1,10 +1,12 @@
 import { useState, useEffect, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query'; // ADD THIS IMPORT
 import type { User } from '@/types';
 import { AuthContext } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient(); // ADD THIS LINE
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -27,12 +29,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+
+    queryClient.clear(); // ✅ Keep this
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+
+    queryClient.clear(); // ✅ Keep this
   };
 
   const value = {
@@ -45,6 +51,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
-// Custom hook to use auth context
-// useAuth moved to separate file to satisfy fast-refresh rule

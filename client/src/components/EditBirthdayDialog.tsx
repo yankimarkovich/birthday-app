@@ -1,15 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,8 +22,16 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-export default function EditBirthdayDialog({ birthday }: { birthday: Birthday }) {
-  const [open, setOpen] = useState(false);
+// NEW: Accept open, onOpenChange, and birthday as props
+export default function EditBirthdayDialog({
+  open,
+  onOpenChange,
+  birthday,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  birthday: Birthday;
+}) {
   const { toast } = useToast();
   const updateBirthday = useUpdateBirthday();
 
@@ -56,17 +58,15 @@ export default function EditBirthdayDialog({ birthday }: { birthday: Birthday })
     try {
       await updateBirthday.mutateAsync({ id: birthday._id, payload: values });
       toast({ title: 'Updated', description: `Saved changes for ${values.name}` });
-      setOpen(false);
+      onOpenChange(false); // Close via prop
     } catch {
       toast({ title: 'Error', description: 'Failed to update birthday' });
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">Edit</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* REMOVED: DialogTrigger - Dashboard will render the button */}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Birthday</DialogTitle>
@@ -87,7 +87,12 @@ export default function EditBirthdayDialog({ birthday }: { birthday: Birthday })
 
           <div className="space-y-2">
             <Label htmlFor="email">Email (optional)</Label>
-            <Input id="email" type="email" placeholder="friend@example.com" {...register('email')} />
+            <Input
+              id="email"
+              type="email"
+              placeholder="friend@example.com"
+              {...register('email')}
+            />
             {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
           </div>
 
@@ -98,12 +103,17 @@ export default function EditBirthdayDialog({ birthday }: { birthday: Birthday })
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea id="notes" placeholder="Favorite cake, gift ideas…" rows={3} {...register('notes')} />
+            <Textarea
+              id="notes"
+              placeholder="Favorite cake, gift ideas…"
+              rows={3}
+              {...register('notes')}
+            />
             {errors.notes && <p className="text-sm text-red-500">{errors.notes.message}</p>}
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
