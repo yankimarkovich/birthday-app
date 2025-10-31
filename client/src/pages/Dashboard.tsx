@@ -127,12 +127,15 @@ function UpcomingList() {
     );
   }
 
+  // Calculate next occurrence for each birthday and sort by soonest
   const enriched = data.data.map((b) => {
     const next = nextOccurrence(b.date);
-    return { ...b, next, ms: next.getTime() - Date.now() };
+    const daysUntil = Math.floor((next.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return { ...b, next, daysUntil };
   });
 
-  const sorted = enriched.sort((a, b) => a.ms - b.ms).slice(0, 10);
+  // Sort by days until next birthday (soonest first)
+  const sorted = enriched.sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 10);
 
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
