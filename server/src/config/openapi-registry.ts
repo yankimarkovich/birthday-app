@@ -1,4 +1,8 @@
-import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
+import { OpenAPIRegistry, extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { z } from 'zod';
+
+// Extend Zod so zod-to-openapi can derive OpenAPI metadata from schemas
+extendZodWithOpenApi(z);
 
 /**
  * OpenAPI Registry

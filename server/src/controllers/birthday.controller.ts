@@ -186,3 +186,27 @@ export const deleteBirthday = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const sendBirthdayWish = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const { id } = req.params;
+
+    const birthday = await Birthday.findOne({ _id: id, userId: req.user.userId });
+
+    if (!birthday) {
+      return res.status(404).json({ success: false, error: 'Birthday not found' });
+    }
+
+    // Server-side log of the wish action (core assignment requirement)
+    logger.info(`Happy Birthday sent to ${birthday.name} (id=${id}) by ${req.user.email}`);
+
+    return res.status(200).json({ success: true, message: 'Birthday wish logged successfully' });
+  } catch (error) {
+    logger.error('Send birthday wish failure:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};

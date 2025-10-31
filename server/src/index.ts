@@ -6,6 +6,8 @@ import { logger } from './utils/logger';
 import { connectDatabase } from './config/database';
 import authRoutes from './routes/auth.routes';
 import birthdayRoutes from './routes/birthday.routes';
+import swaggerUi from 'swagger-ui-express';
+import { getOpenApiDocument } from './docs/openapi';
 
 dotenv.config();
 
@@ -32,6 +34,13 @@ app.get('/health', (_req, res) => {
     uptime: process.uptime(),
   });
 });
+
+// OpenAPI docs
+const openApiDoc = getOpenApiDocument();
+app.get('/openapi.json', (_req, res) => {
+  res.json(openApiDoc);
+});
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
 // Routes
 app.use('/api/auth', authRoutes);

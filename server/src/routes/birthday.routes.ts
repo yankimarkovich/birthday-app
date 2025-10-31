@@ -5,6 +5,7 @@ import {
   getBirthdayById,
   updateBirthday,
   deleteBirthday,
+  sendBirthdayWish,
 } from '../controllers/birthday.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { validate, validateParams } from '../middleware/validation.middleware';
@@ -33,5 +34,8 @@ router.patch('/:id', validateParams(mongoIdSchema), validate(updateBirthdaySchem
 
 // Delete birthday (validate :id parameter)
 router.delete('/:id', validateParams(mongoIdSchema), deleteBirthday);
+
+// Send birthday wish (validate :id parameter)
+router.post('/:id/wish', validateParams(mongoIdSchema), sendBirthdayWish);
 
 export default router;
