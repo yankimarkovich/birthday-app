@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MongoDB Database
   mongodb:
@@ -7,7 +5,7 @@ services:
     container_name: birthday-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - '27017:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin123
@@ -17,7 +15,7 @@ services:
     networks:
       - birthday-network
     healthcheck:
-      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      test: ['CMD', 'mongosh', '--eval', "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +28,7 @@ services:
     container_name: birthday-server
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - '5000:5000'
     environment:
       NODE_ENV: development
       PORT: 5000
@@ -53,7 +51,7 @@ services:
     networks:
       - birthday-network
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
+      test: ['CMD', 'curl', '-f', 'http://localhost:5000/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -66,7 +64,7 @@ services:
     container_name: birthday-client
     restart: unless-stopped
     ports:
-      - "5173:5173"
+      - '5173:5173'
     environment:
       VITE_API_URL: http://localhost:5000/api
     volumes:
