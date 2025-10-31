@@ -83,6 +83,3 @@ export default function Register() {
     </div>
   );
 }
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
