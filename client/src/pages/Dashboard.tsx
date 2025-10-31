@@ -1,4 +1,4 @@
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/button';
 import { useBirthdays, useSendWish, useDeleteBirthday } from '@/hooks/useBirthdays';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { DayButton } from 'react-day-picker';
 import React from 'react';
 import { useMemo, useState } from 'react';
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -64,7 +65,7 @@ export default function Dashboard() {
   );
 }
 
-function Toggle({ value, current, onChange, label }: { value: 'upcoming' | 'calendar' | 'all'; current: string; onChange: (v: any) => void; label: string }) {
+function Toggle({ value, current, onChange, label }: { value: 'upcoming' | 'calendar' | 'all'; current: string; onChange: (v: 'upcoming' | 'calendar' | 'all') => void; label: string }) {
   const active = current === value;
   return (
     <button
@@ -84,7 +85,6 @@ function UpcomingList() {
   const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useBirthdays();
   const sendWish = useSendWish();
-  const del = useDeleteBirthday();
 
   if (isLoading) {
     return <Skeleton className="h-24 w-full" />;
@@ -195,10 +195,10 @@ function BirthdayList() {
             >
               Send Wish
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
+            <ConfirmDeleteDialog
+              title="Delete"
+              description={`Delete ${b.name}? This action cannot be undone.`}
+              onConfirm={async () => {
                 try {
                   await del.mutateAsync(b._id);
                   toast({ title: 'Deleted', description: `${b.name} removed` });
@@ -206,9 +206,7 @@ function BirthdayList() {
                   toast({ title: 'Error', description: 'Failed to delete' });
                 }
               }}
-            >
-              Delete
-            </Button>
+            />
           </div>
         </li>
       ))}
@@ -223,6 +221,37 @@ function CalendarView() {
   const del = useDeleteBirthday();
   const [selected, setSelected] = useState<Date | undefined>(new Date());
 
+  // Source list for hooks to avoid conditional hook calls
+  const source = React.useMemo(() => data?.data ?? [], [data]);
+
+  // Map birthdays to date-key for quick lookup
+  const byDay = useMemo(() => {
+    const map = new Map<string, typeof source>();
+    for (const b of source) {
+      const d = new Date(b.date);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      const arr = map.get(key) || [];
+      arr.push(b);
+      map.set(key, arr);
+    }
+    return map;
+  }, [source]);
+
+  const datesWithBirthdays = useMemo(() => {
+    // normalize to the current year for highlight modifiers
+    return source.map((b) => new Date(new Date().getFullYear(), new Date(b.date).getMonth(), new Date(b.date).getDate()));
+  }, [source]);
+
+  const countsByMonthDay = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const b of source) {
+      const d = new Date(b.date);
+      const key = `${d.getMonth()}-${d.getDate()}`;
+      m.set(key, (m.get(key) || 0) + 1);
+    }
+    return m;
+  }, [source]);
+
   if (isLoading) return <Skeleton className="h-64 w-full" />;
   if (isError || !data)
     return (
@@ -231,38 +260,10 @@ function CalendarView() {
       </div>
     );
 
-  // Map birthdays to date-key for quick lookup
-  const byDay = useMemo(() => {
-    const map = new Map<string, typeof data.data>();
-    for (const b of data.data) {
-      const d = new Date(b.date);
-      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      const arr = map.get(key) || [];
-      arr.push(b);
-      map.set(key, arr);
-    }
-    return map;
-  }, [data.data]);
-
-  const datesWithBirthdays = useMemo(() => {
-    // normalize to the current year for highlight modifiers
-    return data.data.map((b) => new Date(new Date().getFullYear(), new Date(b.date).getMonth(), new Date(b.date).getDate()));
-  }, [data.data]);
-
-  const countsByMonthDay = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const b of data.data) {
-      const d = new Date(b.date);
-      const key = `${d.getMonth()}-${d.getDate()}`;
-      m.set(key, (m.get(key) || 0) + 1);
-    }
-    return m;
-  }, [data.data]);
-
   const modifiers = { hasBirthday: datesWithBirthdays } as const;
 
   const selectedList = (() => {
-    if (!selected) return [] as typeof data.data;
+    if (!selected) return [] as typeof source;
     const k = `${selected.getFullYear()}-${selected.getMonth()}-${selected.getDate()}`;
     return byDay.get(k) || [];
   })();
@@ -343,10 +344,10 @@ function CalendarView() {
                   >
                     Send Wish
                   </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={async () => {
+                  <ConfirmDeleteDialog
+                    title="Delete"
+                    description={`Delete ${b.name}? This action cannot be undone.`}
+                    onConfirm={async () => {
                       try {
                         await del.mutateAsync(b._id);
                         toast({ title: 'Deleted', description: `${b.name} removed` });
@@ -354,9 +355,7 @@ function CalendarView() {
                         toast({ title: 'Error', description: 'Failed to delete' });
                       }
                     }}
-                  >
-                    Delete
-                  </Button>
+                  />
                 </div>
               </li>
             ))}

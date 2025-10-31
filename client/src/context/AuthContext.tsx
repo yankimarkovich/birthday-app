@@ -1,15 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/types';
-
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { useState, useEffect, ReactNode } from 'react';
+import type { User } from '@/types';
+import { AuthContext } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -23,7 +14,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token && savedUser) {
       try {
         setUser(JSON.parse(savedUser));
-      } catch (error) {
+      } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
@@ -56,12 +47,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 // Custom hook to use auth context
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-
-  return context;
-}
+// useAuth moved to separate file to satisfy fast-refresh rule

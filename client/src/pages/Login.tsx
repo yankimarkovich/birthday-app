@@ -1,10 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/useAuth';
 import { api } from '@/lib/axios';
-import type { AuthResponse, ErrorResponse } from '@/types';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import type { AuthResponse } from '@/types';
+import { Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +17,7 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation() as { state?: { from?: Location } };
   const from = location.state?.from?.pathname || '/';
@@ -35,10 +35,14 @@ export default function Login() {
       login(data.token, data.user);
       navigate(from, { replace: true });
     } catch (err: unknown) {
-      const message = (err as any)?.response?.data?.error || 'Login failed';
+      const message = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Login failed';
       setError('root', { message });
     }
   };
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen grid place-items-center p-4">
@@ -74,4 +78,3 @@ export default function Login() {
     </div>
   );
 }
-

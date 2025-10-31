@@ -1,10 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/useAuth';
 import { api } from '@/lib/axios';
 import type { AuthResponse } from '@/types';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +18,7 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function Register() {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -34,10 +34,14 @@ export default function Register() {
       login(data.token, data.user);
       navigate('/', { replace: true });
     } catch (err: unknown) {
-      const message = (err as any)?.response?.data?.error || 'Registration failed';
+      const message = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Registration failed';
       setError('root', { message });
     }
   };
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen grid place-items-center p-4">
@@ -79,4 +83,6 @@ export default function Register() {
     </div>
   );
 }
-
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }

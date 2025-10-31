@@ -57,7 +57,7 @@ export default function EditBirthdayDialog({ birthday }: { birthday: Birthday })
       await updateBirthday.mutateAsync({ id: birthday._id, payload: values });
       toast({ title: 'Updated', description: `Saved changes for ${values.name}` });
       setOpen(false);
-    } catch (e) {
+    } catch {
       toast({ title: 'Error', description: 'Failed to update birthday' });
     }
   };
@@ -115,4 +115,3 @@ export default function EditBirthdayDialog({ birthday }: { birthday: Birthday })
     </Dialog>
   );
 }
-

@@ -44,7 +44,7 @@ export default function AddBirthdayDialog() {
       toast({ title: 'Added', description: `Created birthday for ${values.name}` });
       reset();
       setOpen(false);
-    } catch (e) {
+    } catch {
       toast({ title: 'Error', description: 'Failed to create birthday' });
     }
   };
@@ -102,4 +102,3 @@ export default function AddBirthdayDialog() {
     </Dialog>
   );
 }
-
