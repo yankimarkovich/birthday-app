@@ -8,13 +8,16 @@ import authRoutes from './routes/auth.routes';
 import birthdayRoutes from './routes/birthday.routes';
 import swaggerUi from 'swagger-ui-express';
 import { getOpenApiDocument } from './docs/openapi';
+import rateLimit from 'express-rate-limit';
+import { errorHandler } from './middleware/error.middleware';
+import { requestIdMiddleware } from './middleware/request-id.middleware';
 
 dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Security and parsing middleware
 app.use(helmet());
 app.use(
   cors({
@@ -22,9 +25,20 @@ app.use(
     credentials: true,
   })
 );
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Correlation ID middleware (set early)
+app.use(requestIdMiddleware);
+
+// Basic API rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', apiLimiter);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
@@ -42,29 +56,29 @@ app.get('/openapi.json', (_req, res) => {
 });
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
-// Routes
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/birthdays', birthdayRoutes);
+
+// Centralized error handler (must come after routes)
+app.use(errorHandler);
 
 // Start server function
 const startServer = async () => {
   try {
-    // Connect to database first
     await connectDatabase();
 
-    // Start server only after database is connected
     app.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      logger.info(`📍 Health check: http://localhost:${PORT}/health`);
-      logger.info(`🔐 Auth endpoint: http://localhost:${PORT}/api/auth`);
-      logger.info(`🎂 Birthdays endpoint: http://localhost:${PORT}/api/birthdays`);
-      logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Health: http://localhost:${PORT}/health`);
+      logger.info(`Docs: http://localhost:${PORT}/docs`);
+      logger.info(`API base: http://localhost:${PORT}/api`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    logger.error('Failed to start server:', error as Error);
     process.exit(1);
   }
 };
 
-// Start the server
 startServer();

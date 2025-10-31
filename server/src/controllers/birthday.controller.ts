@@ -24,14 +24,14 @@ export const createBirthday = async (req: Request, res: Response) => {
 
     await birthday.save();
 
-    logger.info(`Birthday created for: ${name} by user ${req.user.email}`);
+    (req.log || logger).info(`Birthday created for: ${name} by user ${req.user.email}`);
 
     return res.status(201).json({
       success: true,
       data: birthday,
     });
   } catch (error) {
-    logger.error('Create birthday failure:', error);
+    (req.log || logger).error(`Create birthday failure: ${(error as Error).message}`);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -58,7 +58,7 @@ export const getBirthdays = async (req: Request, res: Response) => {
       data: birthdays,
     });
   } catch (error) {
-    logger.error('Get birthdays failure:', error);
+    (req.log || logger).error(`Get birthdays failure: ${(error as Error).message}`);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -94,7 +94,7 @@ export const getBirthdayById = async (req: Request, res: Response) => {
       data: birthday,
     });
   } catch (error) {
-    logger.error('Get birthday by ID failure:', error);
+    (req.log || logger).error(`Get birthday by ID failure: ${(error as Error).message}`);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -134,14 +134,14 @@ export const updateBirthday = async (req: Request, res: Response) => {
 
     await birthday.save();
 
-    logger.info(`Birthday ${id} updated by user ${req.user.email}`);
+    (req.log || logger).info(`Birthday ${id} updated by user ${req.user.email}`);
 
     return res.status(200).json({
       success: true,
       data: birthday,
     });
   } catch (error) {
-    logger.error('Update birthday error:', error);
+    (req.log || logger).error(`Update birthday error: ${(error as Error).message}`);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -172,14 +172,14 @@ export const deleteBirthday = async (req: Request, res: Response) => {
       });
     }
 
-    logger.info(`Birthday deleted: ${id} by user ${req.user.email}`);
+    (req.log || logger).info(`Birthday deleted: ${id} by user ${req.user.email}`);
 
     return res.status(200).json({
       success: true,
       message: 'Birthday deleted successfully',
     });
   } catch (error) {
-    logger.error('Delete birthday failure:', error);
+    (req.log || logger).error(`Delete birthday failure: ${(error as Error).message}`);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -202,11 +202,11 @@ export const sendBirthdayWish = async (req: Request, res: Response) => {
     }
 
     // Server-side log of the wish action (core assignment requirement)
-    logger.info(`Happy Birthday sent to ${birthday.name} (id=${id}) by ${req.user.email}`);
+    (req.log || logger).info(`Happy Birthday sent to ${birthday.name} (id=${id}) by ${req.user.email}`);
 
     return res.status(200).json({ success: true, message: 'Birthday wish logged successfully' });
   } catch (error) {
-    logger.error('Send birthday wish failure:', error);
+    (req.log || logger).error(`Send birthday wish failure: ${(error as Error).message}`);
     return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };

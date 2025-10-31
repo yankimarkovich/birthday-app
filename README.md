@@ -17,7 +17,7 @@ docker-compose up --build
 
 The application will be available at:
 - **Frontend:** http://localhost:5173
-- **Backend API:** http://localhost:3000
+- **Backend API:** http://localhost:5000
 - **MongoDB:** localhost:27017
 
 ## 📁 Project Structure

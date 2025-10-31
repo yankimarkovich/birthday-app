@@ -36,7 +36,8 @@ export const register = async (req: Request, res: Response) => {
       { expiresIn: '7d' }
     );
 
-    logger.info(`Registration success: ${email}`);
+    // Business event log with correlation id
+    (req.log || logger).info(`Registration success: ${email}`);
 
     return res.status(201).json({
       success: true,
@@ -48,7 +49,7 @@ export const register = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    logger.error('Registration error:', error);
+    (req.log || logger).error(`Registration error: ${(error as Error).message}`);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -96,7 +97,7 @@ export const login = async (req: Request, res: Response) => {
       { expiresIn: '7d' }
     );
 
-    logger.info(`Login success: ${email}`);
+    (req.log || logger).info(`Login success: ${email}`);
 
     return res.status(200).json({
       success: true,
@@ -108,7 +109,7 @@ export const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    logger.error('Login failure:', error);
+    (req.log || logger).error(`Login failure: ${(error as Error).message}`);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
