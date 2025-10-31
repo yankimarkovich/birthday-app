@@ -21,21 +21,23 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto flex items-center justify-between p-4">
-          <h1 className="text-xl font-semibold text-foreground">Birthday App</h1>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{user?.name}</span>
-            <Button variant="outline" size="sm" onClick={logout}>
+      {/* Modern gradient header with better spacing */}
+      <header className="border-b border-border bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
+        <div className="container mx-auto flex items-center justify-between px-6 py-5">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">🎂 Birthday App</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-base text-muted-foreground font-medium">{user?.name}</span>
+            <Button variant="outline" size="default" onClick={logout} className="font-medium">
               Logout
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto p-4 space-y-6">
+      <main className="container mx-auto px-6 py-8 space-y-8">
+        {/* Modern toggle with better spacing */}
         <div className="flex items-center justify-between">
-          <div className="inline-flex items-center rounded-md border border-border bg-card p-1">
+          <div className="inline-flex items-center rounded-xl border-2 border-border bg-card p-1.5 shadow-sm">
             <Toggle value="upcoming" current={view} onChange={setView} label="Upcoming" />
             <Toggle value="calendar" current={view} onChange={setView} label="Calendar" />
             <Toggle value="all" current={view} onChange={setView} label="All" />
@@ -44,19 +46,19 @@ export default function Dashboard() {
         </div>
 
         {view === 'upcoming' && (
-          <section className="space-y-3">
+          <section className="space-y-4">
             <UpcomingList />
           </section>
         )}
 
         {view === 'calendar' && (
-          <section className="space-y-3">
+          <section className="space-y-4">
             <CalendarView />
           </section>
         )}
 
         {view === 'all' && (
-          <section className="space-y-3">
+          <section className="space-y-4">
             <BirthdayList />
           </section>
         )}
@@ -65,15 +67,27 @@ export default function Dashboard() {
   );
 }
 
-function Toggle({ value, current, onChange, label }: { value: 'upcoming' | 'calendar' | 'all'; current: string; onChange: (v: 'upcoming' | 'calendar' | 'all') => void; label: string }) {
+function Toggle({
+  value,
+  current,
+  onChange,
+  label,
+}: {
+  value: 'upcoming' | 'calendar' | 'all';
+  current: string;
+  onChange: (v: 'upcoming' | 'calendar' | 'all') => void;
+  label: string;
+}) {
   const active = current === value;
   return (
     <button
       type="button"
       onClick={() => onChange(value)}
       aria-pressed={active}
-      className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-        active ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
+      className={`px-5 py-2.5 text-base font-medium rounded-lg transition-all duration-200 ${
+        active
+          ? 'bg-primary text-primary-foreground shadow-md scale-105'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
       }`}
     >
       {label}
@@ -87,20 +101,28 @@ function UpcomingList() {
   const sendWish = useSendWish();
 
   if (isLoading) {
-    return <Skeleton className="h-24 w-full" />;
+    return <Skeleton className="h-32 w-full rounded-xl" />;
   }
   if (isError || !data) {
     return (
-      <div className="bg-card border border-border rounded-lg p-6 text-red-500">
-        Failed to load. <button className="underline" onClick={() => refetch()}>Retry</button>
+      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
+        <p className="text-base font-medium">Failed to load birthdays.</p>
+        <button
+          className="underline text-base mt-2 hover:text-destructive/80"
+          onClick={() => refetch()}
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   if (data.count === 0) {
     return (
-      <div className="bg-card border border-border rounded-lg p-6 text-muted-foreground">
-        No birthdays yet. Add some to get started.
+      <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
+        <p className="text-lg text-muted-foreground font-medium">
+          No birthdays yet. Add some to get started! 🎉
+        </p>
       </div>
     );
   }
@@ -113,24 +135,34 @@ function UpcomingList() {
   const sorted = enriched.sort((a, b) => a.ms - b.ms).slice(0, 10);
 
   return (
-    <ul className="bg-card border border-border rounded-lg divide-y divide-border">
+    <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {sorted.map((b) => {
         const today = isToday(b.date);
         return (
-          <li key={b._id} className="flex items-center justify-between p-4">
+          <li
+            key={b._id}
+            className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
+          >
             <div>
-              <div className="flex items-center gap-2">
-                <div className="text-foreground font-medium">{b.name}</div>
-                {today && <Badge variant="secondary">Today</Badge>}
+              <div className="flex items-center gap-3">
+                <div className="text-foreground font-semibold text-lg">{b.name}</div>
+                {today && (
+                  <Badge
+                    variant="default"
+                    className="bg-accent text-accent-foreground text-sm px-3 py-1"
+                  >
+                    Today! 🎉
+                  </Badge>
+                )}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-base text-muted-foreground mt-1">
                 {format(new Date(b.date), 'MMM d')} • <Countdown target={b.next} />
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
-                variant="secondary"
-                size="sm"
+                variant="default"
+                size="default"
                 disabled={!today}
                 onClick={async () => {
                   try {
@@ -140,6 +172,7 @@ function UpcomingList() {
                     toast({ title: 'Error', description: 'Failed to send wish' });
                   }
                 }}
+                className="font-medium"
               >
                 Send Wish
               </Button>
@@ -157,33 +190,46 @@ function BirthdayList() {
   const sendWish = useSendWish();
   const del = useDeleteBirthday();
 
-  if (isLoading) return <Skeleton className="h-24 w-full" />;
+  if (isLoading) return <Skeleton className="h-32 w-full rounded-xl" />;
   if (isError || !data)
     return (
-      <div className="bg-card border border-border rounded-lg p-6 text-red-500">
-        Failed to load. <button className="underline" onClick={() => refetch()}>Retry</button>
+      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
+        <p className="text-base font-medium">Failed to load birthdays.</p>
+        <button
+          className="underline text-base mt-2 hover:text-destructive/80"
+          onClick={() => refetch()}
+        >
+          Retry
+        </button>
       </div>
     );
   if (data.count === 0)
     return (
-      <div className="bg-card border border-border rounded-lg p-6 text-muted-foreground">
-        No birthdays yet. Add some to get started.
+      <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
+        <p className="text-lg text-muted-foreground font-medium">
+          No birthdays yet. Add some to get started! 🎉
+        </p>
       </div>
     );
 
   return (
-    <ul className="bg-card border border-border rounded-lg divide-y divide-border">
+    <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {data.data.map((b) => (
-        <li key={b._id} className="flex items-center justify-between p-4">
+        <li
+          key={b._id}
+          className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
+        >
           <div>
-            <div className="text-foreground font-medium">{b.name}</div>
-            <div className="text-sm text-muted-foreground">{format(new Date(b.date), 'PPP')}</div>
+            <div className="text-foreground font-semibold text-lg">{b.name}</div>
+            <div className="text-base text-muted-foreground mt-1">
+              {format(new Date(b.date), 'PPP')}
+            </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <EditBirthdayDialog birthday={b} />
             <Button
-              variant="secondary"
-              size="sm"
+              variant="default"
+              size="default"
               onClick={async () => {
                 try {
                   await sendWish.mutateAsync(b._id);
@@ -192,6 +238,7 @@ function BirthdayList() {
                   toast({ title: 'Error', description: 'Failed to send wish' });
                 }
               }}
+              className="font-medium"
             >
               Send Wish
             </Button>
@@ -224,12 +271,13 @@ function CalendarView() {
   // Source list for hooks to avoid conditional hook calls
   const source = React.useMemo(() => data?.data ?? [], [data]);
 
-  // Map birthdays to date-key for quick lookup
+  // Map birthdays to date-key for quick lookup (month-day only, ignore year)
   const byDay = useMemo(() => {
     const map = new Map<string, typeof source>();
     for (const b of source) {
       const d = new Date(b.date);
-      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      // Use only month and day for the key, so we can match across years
+      const key = `${d.getMonth()}-${d.getDate()}`;
       const arr = map.get(key) || [];
       arr.push(b);
       map.set(key, arr);
@@ -239,7 +287,10 @@ function CalendarView() {
 
   const datesWithBirthdays = useMemo(() => {
     // normalize to the current year for highlight modifiers
-    return source.map((b) => new Date(new Date().getFullYear(), new Date(b.date).getMonth(), new Date(b.date).getDate()));
+    return source.map(
+      (b) =>
+        new Date(new Date().getFullYear(), new Date(b.date).getMonth(), new Date(b.date).getDate())
+    );
   }, [source]);
 
   const countsByMonthDay = useMemo(() => {
@@ -252,11 +303,17 @@ function CalendarView() {
     return m;
   }, [source]);
 
-  if (isLoading) return <Skeleton className="h-64 w-full" />;
+  if (isLoading) return <Skeleton className="h-96 w-full rounded-xl" />;
   if (isError || !data)
     return (
-      <div className="bg-card border border-border rounded-lg p-6 text-red-500">
-        Failed to load. <button className="underline" onClick={() => refetch()}>Retry</button>
+      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
+        <p className="text-base font-medium">Failed to load birthdays.</p>
+        <button
+          className="underline text-base mt-2 hover:text-destructive/80"
+          onClick={() => refetch()}
+        >
+          Retry
+        </button>
       </div>
     );
 
@@ -264,83 +321,131 @@ function CalendarView() {
 
   const selectedList = (() => {
     if (!selected) return [] as typeof source;
-    const k = `${selected.getFullYear()}-${selected.getMonth()}-${selected.getDate()}`;
+    // Use only month and day for lookup (same as byDay map)
+    const k = `${selected.getMonth()}-${selected.getDate()}`;
     return byDay.get(k) || [];
   })();
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <div className="bg-card border border-border rounded-lg p-3">
-        <Calendar
-          mode="single"
-          selected={selected}
-          onSelect={setSelected}
-          modifiers={modifiers}
-          classNames={{
-            day: 'group/day data-[hasBirthday=true]:bg-secondary/40',
-          }}
-          components={{
-            DayButton: (props: React.ComponentProps<typeof DayButton>) => {
-              const d = props.day.date;
-              const key = `${d.getMonth()}-${d.getDate()}`;
-              const count = countsByMonthDay.get(key) || 0;
-              const displayCount = count > 9 ? '9+' : String(count);
-              return (
-                <button
-                  {...props}
-                  className={`relative flex aspect-square h-auto w-full min-w-[--cell-size] items-center justify-center rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none ${
-                    (props.className as string) || ''
-                  }`}
-                >
-                  {/* Day number is rendered by DayPicker as children */}
-                  {props.children}
-                  {count === 1 && (
-                    <span
-                      className="absolute top-1 right-1 inline-block h-1.5 w-1.5 rounded-full bg-primary/90"
-                      aria-hidden
-                    />
-                  )}
-                  {count > 1 && (
-                    <span
-                      className="absolute top-1 right-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] leading-none text-primary-foreground shadow-sm"
-                      aria-label={`${count} birthdays`}
-                    >
-                      {displayCount}
-                    </span>
-                  )}
-                </button>
-              );
-            },
-          }}
-        />
-        <div className="text-xs text-muted-foreground mt-2">Days with birthdays are subtly highlighted.</div>
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      {/* Compact calendar container with better proportions */}
+      <div className="bg-card border-2 border-border rounded-xl shadow-lg overflow-hidden">
+        <div className="p-6">
+          <Calendar
+            mode="single"
+            selected={selected}
+            onSelect={setSelected}
+            modifiers={modifiers}
+            className="mx-auto"
+            classNames={{
+              months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
+              month: 'space-y-5',
+              caption: 'flex justify-center pt-1 relative items-center mb-3',
+              caption_label: 'text-xl font-bold text-foreground',
+              nav: 'space-x-1 flex items-center',
+              nav_button:
+                'h-10 w-10 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-muted rounded-md transition-all',
+              nav_button_previous: 'absolute left-1',
+              nav_button_next: 'absolute right-1',
+              table: 'w-full border-collapse',
+              head_row: 'flex',
+              head_cell: 'text-muted-foreground rounded-md w-[60px] font-semibold text-base',
+              row: 'flex w-full mt-2',
+              cell: 'relative p-0 text-center text-base focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent/50 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md',
+              day: 'h-[60px] w-[60px] p-0 font-normal aria-selected:opacity-100 group/day data-[hasBirthday=true]:bg-primary/10 data-[hasBirthday=true]:text-primary data-[hasBirthday=true]:font-semibold',
+              day_selected:
+                'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
+              day_today: 'bg-accent text-accent-foreground font-bold',
+              day_outside:
+                'text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30',
+              day_disabled: 'text-muted-foreground opacity-50',
+              day_range_middle: 'aria-selected:bg-accent aria-selected:text-accent-foreground',
+              day_hidden: 'invisible',
+            }}
+            components={{
+              DayButton: (props: React.ComponentProps<typeof DayButton>) => {
+                const d = props.day.date;
+                const key = `${d.getMonth()}-${d.getDate()}`;
+                const count = countsByMonthDay.get(key) || 0;
+                const displayCount = count > 9 ? '9+' : String(count);
+                return (
+                  <button
+                    {...props}
+                    className={`relative inline-flex h-[60px] w-[60px] items-center justify-center rounded-lg text-lg font-medium transition-all hover:bg-accent/50 hover:text-accent-foreground hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                      (props.className as string) || ''
+                    }`}
+                  >
+                    {/* Day number is rendered by DayPicker as children */}
+                    {props.children}
+                    {count === 1 && (
+                      <span
+                        className="absolute top-1.5 right-1.5 inline-block h-2.5 w-2.5 rounded-full bg-primary shadow-sm"
+                        aria-hidden
+                      />
+                    )}
+                    {count > 1 && (
+                      <span
+                        className="absolute top-1 right-1 rounded-full bg-primary px-2 py-1 text-[11px] font-bold leading-none text-primary-foreground shadow-md"
+                        aria-label={`${count} birthdays`}
+                      >
+                        {displayCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              },
+            }}
+          />
+        </div>
+        <div className="text-sm text-muted-foreground px-6 pb-5 text-center font-medium border-t border-border pt-4 bg-muted/20">
+          Days with birthdays are highlighted in purple 💜
+        </div>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-md font-medium text-foreground">{selected ? format(selected, 'PPP') : 'Select a day'}</h3>
+      {/* Selected day details */}
+      <div className="space-y-4">
+        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-border rounded-xl p-6 shadow-lg">
+          <h3 className="text-xl font-bold text-foreground">
+            {selected ? format(selected, 'PPPP') : 'Select a day'}
+          </h3>
+        </div>
+
         {selectedList.length === 0 ? (
-          <div className="bg-card border border-border rounded-lg p-6 text-muted-foreground">No birthdays on this day.</div>
+          <div className="bg-card border-2 border-border rounded-xl p-8 text-center shadow-lg">
+            <p className="text-base text-muted-foreground font-medium">
+              No birthdays on this day 📅
+            </p>
+          </div>
         ) : (
-          <ul className="bg-card border border-border rounded-lg divide-y divide-border">
+          <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
             {selectedList.map((b) => (
-              <li key={b._id} className="flex items-center justify-between p-4">
+              <li
+                key={b._id}
+                className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
+              >
                 <div>
-                  <div className="text-foreground font-medium">{b.name}</div>
-                  <div className="text-sm text-muted-foreground">{format(new Date(b.date), 'PPP')}</div>
+                  <div className="text-foreground font-semibold text-lg">{b.name}</div>
+                  <div className="text-base text-muted-foreground mt-1">
+                    {format(new Date(b.date), 'PPP')}
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <Button
-                    variant="secondary"
-                    size="sm"
+                    variant="default"
+                    size="default"
                     disabled={!isToday(b.date)}
                     onClick={async () => {
                       try {
                         await sendWish.mutateAsync(b._id);
-                        toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                        toast({
+                          title: 'Sent 🎉',
+                          description: `Wished ${b.name} a happy birthday`,
+                        });
                       } catch {
                         toast({ title: 'Error', description: 'Failed to send wish' });
                       }
                     }}
+                    className="font-medium"
                   >
                     Send Wish
                   </Button>
