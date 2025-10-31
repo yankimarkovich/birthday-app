@@ -7,8 +7,12 @@ import {
   deleteBirthday,
 } from '../controllers/birthday.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
-import { createBirthdaySchema, updateBirthdaySchema } from '../schemas/birthday.schema';
+import { validate, validateParams } from '../middleware/validation.middleware';
+import {
+  createBirthdaySchema,
+  updateBirthdaySchema,
+  mongoIdSchema,
+} from '../schemas/birthday.schema';
 
 const router = Router();
 
@@ -21,13 +25,13 @@ router.post('/', validate(createBirthdaySchema), createBirthday);
 // Get all birthdays
 router.get('/', getBirthdays);
 
-// Get single birthday
-router.get('/:id', getBirthdayById);
+// Get single birthday (validate :id parameter)
+router.get('/:id', validateParams(mongoIdSchema), getBirthdayById);
 
-// Update birthday
-router.patch('/:id', validate(updateBirthdaySchema), updateBirthday);
+// Update birthday (validate both :id parameter and body)
+router.patch('/:id', validateParams(mongoIdSchema), validate(updateBirthdaySchema), updateBirthday);
 
-// Delete birthday
-router.delete('/:id', deleteBirthday);
+// Delete birthday (validate :id parameter)
+router.delete('/:id', validateParams(mongoIdSchema), deleteBirthday);
 
 export default router;

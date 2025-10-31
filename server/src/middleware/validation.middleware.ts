@@ -1,17 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
-import { AnyZodObject, ZodError } from 'zod';
+import { z, ZodError } from 'zod';
 import { logger } from '../utils/logger';
 
-//FACTORY FUNCTION enable one validation function for all zod schemas
-export const validate = (schema: AnyZodObject) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * Validation Middleware
+ *
+ * Validates request body, params, or query using Zod schemas
+ *
+ * Usage:
+ *   router.post('/', validate(createSchema), controller)
+ *   router.get('/:id', validateParams(mongoIdSchema), controller)
+ */
+
+/**
+ * Validate request body
+ */
+export const validate = (schema: z.ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     try {
-      const validated = await schema.parseAsync(req.body);
-      req.body = validated;
+      schema.parse(req.body);
       return next();
     } catch (error) {
       if (error instanceof ZodError) {
-        logger.warn(`Validation failed: ${JSON.stringify(error.errors)}`);
+        logger.warn('Validation error:', error.errors);
         return res.status(400).json({
           success: false,
           error: 'Validation error',
@@ -21,12 +32,57 @@ export const validate = (schema: AnyZodObject) => {
           })),
         });
       }
+      next(error);
+    }
+  };
+};
 
-      logger.error('Validation middleware error:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Internal server error',
-      });
+/**
+ * Validate request parameters (URL params like :id)
+ */
+export const validateParams = (schema: z.ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      schema.parse(req.params);
+      return next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+        logger.warn('Parameter validation error:', error.errors);
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid parameter',
+          details: error.errors.map((err) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        });
+      }
+      next(error);
+    }
+  };
+};
+
+/**
+ * Validate request query string
+ */
+export const validateQuery = (schema: z.ZodSchema) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      schema.parse(req.query);
+      return next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+        logger.warn('Query validation error:', error.errors);
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid query parameters',
+          details: error.errors.map((err) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        });
+      }
+      next(error);
     }
   };
 };

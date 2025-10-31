@@ -1,11 +1,28 @@
 import { z } from 'zod';
 
 // ============================================================
+// PARAMETER SCHEMAS (URL parameter validation)
+// ============================================================
+
+/**
+ * MongoDB ObjectId Schema
+ * Validates MongoDB ObjectId format (24 hex characters)
+ * Used for :id parameter in GET/PATCH/DELETE routes
+ */
+export const mongoIdSchema = z.object({
+  id: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid MongoDB ObjectId format')
+    .trim(),
+});
+
+// ============================================================
 // INPUT SCHEMAS (Request validation)
 // ============================================================
 
 /**
  * Create Birthday Schema
+ * POST /api/birthdays
  */
 export const createBirthdaySchema = z.object({
   name: z
@@ -30,12 +47,13 @@ export const createBirthdaySchema = z.object({
 
 /**
  * Update Birthday Schema
+ * PATCH /api/birthdays/:id
  * Makes ALL fields optional only for the update
  */
 export const updateBirthdaySchema = createBirthdaySchema.partial();
 
 // ============================================================
-// RESPONSE SCHEMAS (API response validation & types)
+// RESPONSE SCHEMAS (API response types)
 // ============================================================
 
 /**
@@ -57,18 +75,31 @@ export const birthdaySchema = z.object({
 /**
  * Get All Birthdays Response
  * GET /api/birthdays
+ *
+ * MATCHES YOUR CONTROLLER RESPONSE:
+ * {
+ *   success: true,
+ *   count: 5,
+ *   data: [...]
+ * }
  */
 export const birthdaysListResponseSchema = z.object({
   success: z.literal(true),
-  data: z.array(birthdaySchema),
   count: z.number(),
+  data: z.array(birthdaySchema),
 });
 
 /**
- * Get Single Birthday Response
+ * Single Birthday Response
  * GET /api/birthdays/:id
  * POST /api/birthdays (create)
  * PATCH /api/birthdays/:id (update)
+ *
+ * MATCHES YOUR CONTROLLER RESPONSE:
+ * {
+ *   success: true,
+ *   data: {...}
+ * }
  */
 export const singleBirthdayResponseSchema = z.object({
   success: z.literal(true),
@@ -78,6 +109,12 @@ export const singleBirthdayResponseSchema = z.object({
 /**
  * Delete Birthday Response
  * DELETE /api/birthdays/:id
+ *
+ * MATCHES YOUR CONTROLLER RESPONSE:
+ * {
+ *   success: true,
+ *   message: "Birthday deleted successfully"
+ * }
  */
 export const deleteBirthdayResponseSchema = z.object({
   success: z.literal(true),
@@ -96,6 +133,9 @@ export const sendWishResponseSchema = z.object({
 // ============================================================
 // TYPESCRIPT TYPES
 // ============================================================
+
+// Parameter types
+export type MongoIdParam = z.infer<typeof mongoIdSchema>;
 
 // Input types
 export type CreateBirthdayInput = z.infer<typeof createBirthdaySchema>;

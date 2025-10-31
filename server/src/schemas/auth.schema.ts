@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 /**
  * User Registration Schema
+ * POST /api/auth/register
  */
 export const registerSchema = z.object({
   name: z
@@ -22,6 +23,7 @@ export const registerSchema = z.object({
 
 /**
  * User Login Schema
+ * POST /api/auth/login
  */
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email('Please provide a valid email'),
@@ -29,7 +31,7 @@ export const loginSchema = z.object({
 });
 
 // ============================================================
-// RESPONSE SCHEMAS (API response validation & types)
+// RESPONSE SCHEMAS (API response types)
 // ============================================================
 
 /**
@@ -45,14 +47,18 @@ export const userSchema = z.object({
 /**
  * Auth Success Response Schema
  * Returned by /register and /login endpoints
+ *
+ * MATCHES YOUR CONTROLLER RESPONSE:
+ * {
+ *   success: true,
+ *   token: "...",
+ *   user: { id, name, email }
+ * }
  */
 export const authResponseSchema = z.object({
   success: z.literal(true),
-  message: z.string(),
-  data: z.object({
-    token: z.string(),
-    user: userSchema,
-  }),
+  token: z.string(),
+  user: userSchema,
 });
 
 /**
