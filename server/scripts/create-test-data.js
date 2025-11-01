@@ -1,8 +1,9 @@
 /**
  * Seed Test Data Script - Using REST API
  *
- * Adds 100 test birthdays via API:
+ * Adds 110 test birthdays via API:
  * - 50 birthdays spread randomly across the year
+ * - 10 birthdays for TODAY (to test the Today tab)
  * - 5 special dates with 10 birthdays each
  *
  * Automatically creates test user if it doesn't exist
@@ -209,7 +210,26 @@ async function seedTestData() {
       });
     }
 
-    // 2. Generate 5 dates with 10 birthdays each
+    // 2. Generate 10 birthdays for TODAY
+    console.log('Creating 10 birthdays for today...');
+    const today = new Date();
+    const todayFormatted = new Intl.DateTimeFormat('en-US', {
+      month: 'long',
+      day: 'numeric',
+    }).format(today);
+
+    for (let i = 0; i < 10; i++) {
+      const name = randomName();
+      birthdays.push({
+        name,
+        date: formatDate(specificDate(today.getMonth(), today.getDate())),
+        email: randomEmail(name),
+        phone: `+1-555-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
+        notes: `${TEST_MARKER} - TODAY`,
+      });
+    }
+
+    // 3. Generate 5 dates with 10 birthdays each
     console.log('Creating 5 special dates with 10 birthdays each...');
     const specialDates = [
       { month: 0, day: 15, name: 'January 15' },
@@ -232,7 +252,7 @@ async function seedTestData() {
       }
     }
 
-    // 3. Create all birthdays
+    // 4. Create all birthdays
     console.log(`\n🚀 Uploading ${birthdays.length} birthdays to server...\n`);
 
     let successCount = 0;
@@ -262,7 +282,9 @@ async function seedTestData() {
     console.log(`   - Successfully created: ${successCount}`);
     console.log(`   - Errors: ${errorCount}\n`);
 
-    console.log(`🎯 Special dates with 10 birthdays:`);
+    console.log(`🎉 Today's birthdays: 10 birthdays for ${todayFormatted}`);
+
+    console.log(`\n🎯 Special dates with 10 birthdays:`);
     specialDates.forEach(({ name }) => console.log(`   - ${name}`));
 
     console.log(`\n👤 Test User Credentials:`);
@@ -271,7 +293,8 @@ async function seedTestData() {
 
     console.log(`\n💡 To view the data:`);
     console.log(`   1. Login with the test user credentials above`);
-    console.log(`   2. Navigate to the calendar view to see the special dates\n`);
+    console.log(`   2. Check the "Today" tab to see today's 10 birthdays`);
+    console.log(`   3. Navigate to the calendar view to see the special dates\n`);
 
     console.log(`🗑️  To delete all test data:`);
     console.log(`   npm run clean\n`);
