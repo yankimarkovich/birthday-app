@@ -115,10 +115,18 @@ export function useDeleteBirthday() {
 }
 
 export function useSendWish() {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
       const { data } = await api.post(`/birthdays/${id}/wish`);
       return data as { success: true; message: string };
+    },
+    onSuccess: () => {
+      // ✅ CRITICAL FIX: Invalidate all birthday queries to refetch updated lastWishSent
+      // Without this, the button won't update until manual page refresh
+      qc.invalidateQueries({ queryKey: queryKeys.birthdays });
+      qc.invalidateQueries({ queryKey: queryKeys.todaysBirthdays });
+      qc.invalidateQueries({ queryKey: queryKeys.monthBirthdays });
     },
   });
 }

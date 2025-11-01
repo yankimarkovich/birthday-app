@@ -219,6 +219,7 @@ function TodayList({
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {data.data.map((b) => {
+        // Recalculate on every render to catch backend updates
         const alreadySent = wasWishSentThisYear(b.lastWishSent);
         return (
           <li
@@ -335,72 +336,76 @@ function ThisMonthList({
 
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
-      {sorted.map((b) => (
-        <li
-          key={b._id}
-          className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
-        >
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="text-foreground font-semibold text-lg">{b.name}</div>
-              {b.isTodayBirthday && (
-                <Badge
-                  variant="default"
-                  className="bg-accent text-accent-foreground text-sm px-3 py-1"
-                >
-                  Today! 🎉
-                </Badge>
-              )}
-            </div>
-            <div className="text-base text-muted-foreground mt-1">
-              {format(new Date(b.date), 'MMM d')} •{' '}
-              <span className="font-bold text-foreground">
-                <Countdown target={b.next} />
-              </span>
-              {b.alreadySent && b.lastWishSent && (
-                <span className="ml-2 text-xs text-muted-foreground">
-                  • Wished on {format(new Date(b.lastWishSent), 'MMM d')}
+      {sorted.map((b) => {
+        // Recalculate on every render to catch backend updates
+        const alreadySent = wasWishSentThisYear(b.lastWishSent);
+        return (
+          <li
+            key={b._id}
+            className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
+          >
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="text-foreground font-semibold text-lg">{b.name}</div>
+                {b.isTodayBirthday && (
+                  <Badge
+                    variant="default"
+                    className="bg-accent text-accent-foreground text-sm px-3 py-1"
+                  >
+                    Today! 🎉
+                  </Badge>
+                )}
+              </div>
+              <div className="text-base text-muted-foreground mt-1">
+                {format(new Date(b.date), 'MMM d')} •{' '}
+                <span className="font-bold text-foreground">
+                  <Countdown target={b.next} />
                 </span>
-              )}
+                {alreadySent && b.lastWishSent && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    • Wished on {format(new Date(b.lastWishSent), 'MMM d')}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="default"
-              onClick={() => onEdit(b)}
-              className="font-medium"
-            >
-              Edit
-            </Button>
-            <Button
-              variant={b.alreadySent ? 'secondary' : 'default'}
-              size="default"
-              disabled={b.alreadySent || sendWish.isPending}
-              onClick={async () => {
-                try {
-                  await sendWish.mutateAsync(b._id);
-                  toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
-                } catch (error: any) {
-                  const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                  toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
-                }
-              }}
-              className={`font-medium ${b.alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {b.alreadySent ? 'Wish Sent ✓' : 'Send Wish'}
-            </Button>
-            <Button
-              variant="destructive"
-              size="default"
-              onClick={() => onDelete(b)}
-              className="font-medium"
-            >
-              Delete
-            </Button>
-          </div>
-        </li>
-      ))}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => onEdit(b)}
+                className="font-medium"
+              >
+                Edit
+              </Button>
+              <Button
+                variant={alreadySent ? 'secondary' : 'default'}
+                size="default"
+                disabled={alreadySent || sendWish.isPending}
+                onClick={async () => {
+                  try {
+                    await sendWish.mutateAsync(b._id);
+                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                  } catch (error: any) {
+                    const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+                  }
+                }}
+                className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {alreadySent ? 'Wish Sent ✓' : 'Send Wish'}
+              </Button>
+              <Button
+                variant="destructive"
+                size="default"
+                onClick={() => onDelete(b)}
+                className="font-medium"
+              >
+                Delete
+              </Button>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -448,6 +453,7 @@ function BirthdayList({
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {data.data.map((b) => {
         const isTodayBirthday = isToday(b.date);
+        // Recalculate on every render to catch backend updates
         const alreadySent = wasWishSentThisYear(b.lastWishSent);
         return (
           <li
@@ -669,6 +675,7 @@ function CalendarView({
               <ul className="divide-y-2 divide-border">
                 {selectedList.map((b) => {
                   const isTodayBirthday = isToday(b.date);
+                  // Recalculate on every render to catch backend updates
                   const alreadySent = wasWishSentThisYear(b.lastWishSent);
                   return (
                     <li
