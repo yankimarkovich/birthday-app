@@ -290,6 +290,11 @@ export const deleteBirthday = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Send birthday wish
+ * Validates that wish hasn't been sent this year, then saves timestamp
+ * Business rule: One wish per birthday per year
+ */
 export const sendBirthdayWish = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -299,17 +304,47 @@ export const sendBirthdayWish = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     const birthday = await Birthday.findOne({ _id: id, userId: req.user.userId });
-
     if (!birthday) {
       return res.status(404).json({ success: false, error: 'Birthday not found' });
     }
 
+    // SERVER-SIDE VALIDATION: Check if wish already sent this year
+    // Why check on server: Client validation can be bypassed
+    // Why compare years: Birthdays repeat annually
+    const currentYear = new Date().getFullYear();
+
+    if (birthday.lastWishSent) {
+      const lastSentYear = new Date(birthday.lastWishSent).getFullYear();
+
+      if (lastSentYear === currentYear) {
+        // Already sent this year - reject the request
+        (req.log || logger).warn(
+          `Duplicate wish attempt for ${birthday.name} (id=${id}) by ${req.user.email} - already sent on ${birthday.lastWishSent.toISOString()}`
+        );
+
+        return res.status(400).json({
+          success: false,
+          error: 'Birthday wish already sent this year',
+          lastSent: birthday.lastWishSent,
+        });
+      }
+    }
+
+    // Update lastWishSent timestamp
+    // This persists the wish action to database
+    birthday.lastWishSent = new Date();
+    await birthday.save();
+
     // Server-side log of the wish action (core assignment requirement)
     (req.log || logger).info(
-      `Happy Birthday sent to ${birthday.name} (id=${id}) by ${req.user.email}`
+      `Happy Birthday sent to ${birthday.name} (id=${id}) by ${req.user.email} at ${birthday.lastWishSent.toISOString()}`
     );
 
-    return res.status(200).json({ success: true, message: 'Birthday wish logged successfully' });
+    return res.status(200).json({
+      success: true,
+      message: 'Birthday wish sent successfully',
+      sentAt: birthday.lastWishSent,
+    });
   } catch (error) {
     (req.log || logger).error(`Send birthday wish failure: ${(error as Error).message}`);
     return res.status(500).json({ success: false, error: 'Internal server error' });

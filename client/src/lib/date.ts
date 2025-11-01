@@ -1,3 +1,5 @@
+import { getYear, isSameDay, addYears, isBefore, differenceInMilliseconds } from 'date-fns';
+
 export function nextOccurrence(dateInput: string | Date, nowInput: Date = new Date()): Date {
   const source = new Date(dateInput);
   const now = new Date(nowInput);
@@ -6,16 +8,16 @@ export function nextOccurrence(dateInput: string | Date, nowInput: Date = new Da
   if (isNaN(targetThisYear.getTime())) {
     return source; // fallback
   }
-  // If birthday already passed today (end of day), schedule for next year
-  if (targetThisYear.getTime() < now.getTime() - 0) {
-    return new Date(now.getFullYear() + 1, source.getMonth(), source.getDate());
+
+  if (isBefore(targetThisYear, now)) {
+    return addYears(targetThisYear, 1);
   }
   return targetThisYear;
 }
 
 export function getCountdownParts(target: Date, nowInput: Date = new Date()) {
   const now = new Date(nowInput);
-  let delta = Math.max(0, target.getTime() - now.getTime());
+  let delta = Math.max(0, differenceInMilliseconds(target, now));
 
   const days = Math.floor(delta / (24 * 60 * 60 * 1000));
   delta -= days * 24 * 60 * 60 * 1000;
@@ -25,12 +27,17 @@ export function getCountdownParts(target: Date, nowInput: Date = new Date()) {
   delta -= minutes * 60 * 1000;
   const seconds = Math.floor(delta / 1000);
 
-  return { days, hours, minutes, seconds, totalMs: target.getTime() - now.getTime() };
+  return { days, hours, minutes, seconds, totalMs: differenceInMilliseconds(target, now) };
 }
 
 export function isToday(dateInput: string | Date, nowInput: Date = new Date()): boolean {
   const d = new Date(dateInput);
   const n = new Date(nowInput);
-  return d.getDate() === n.getDate() && d.getMonth() === n.getMonth();
+  return isSameDay(d, n);
 }
 
+export function wasWishSentThisYear(lastWishSent: string | undefined): boolean {
+  if (!lastWishSent) return false;
+
+  return getYear(new Date(lastWishSent)) === getYear(new Date());
+}

@@ -49,6 +49,7 @@ export const createBirthdaySchema = z.object({
  * Update Birthday Schema
  * PATCH /api/birthdays/:id
  * Makes ALL fields optional only for the update
+ * Note: lastWishSent is NOT updatable by users - only set by sendBirthdayWish endpoint
  */
 export const updateBirthdaySchema = createBirthdaySchema.partial();
 
@@ -59,6 +60,11 @@ export const updateBirthdaySchema = createBirthdaySchema.partial();
 /**
  * Birthday Object Schema
  * Single birthday as returned from database
+ *
+ * NEW: Added lastWishSent field (Task 4)
+ * - Stores timestamp of when wish was last sent
+ * - Optional because existing birthdays don't have it
+ * - Used to prevent duplicate wishes in same year
  */
 export const birthdaySchema = z.object({
   _id: z.string(),
@@ -68,6 +74,7 @@ export const birthdaySchema = z.object({
   email: z.string().optional(),
   phone: z.string().optional(),
   notes: z.string().optional(),
+  lastWishSent: z.date().or(z.string()).optional(), // NEW: When wish was last sent
   createdAt: z.date().or(z.string()),
   updatedAt: z.date().or(z.string()),
 });
@@ -75,6 +82,8 @@ export const birthdaySchema = z.object({
 /**
  * Get All Birthdays Response
  * GET /api/birthdays
+ * GET /api/birthdays/today
+ * GET /api/birthdays/this-month
  *
  * MATCHES YOUR CONTROLLER RESPONSE:
  * {
@@ -122,12 +131,37 @@ export const deleteBirthdayResponseSchema = z.object({
 });
 
 /**
- * Send Birthday Wish Response
+ * Send Birthday Wish Response - Success
  * POST /api/birthdays/:id/wish
+ *
+ * UPDATED (Task 4): Now includes sentAt timestamp
+ * {
+ *   success: true,
+ *   message: "Birthday wish sent successfully",
+ *   sentAt: "2025-11-01T14:30:00.000Z"
+ * }
  */
 export const sendWishResponseSchema = z.object({
   success: z.literal(true),
   message: z.string(),
+  sentAt: z.date().or(z.string()), // NEW: Timestamp when wish was sent
+});
+
+/**
+ * Send Birthday Wish Response - Duplicate Error
+ * POST /api/birthdays/:id/wish (when already sent this year)
+ *
+ * NEW (Task 4): Error response when wish already sent this year
+ * {
+ *   success: false,
+ *   error: "Birthday wish already sent this year",
+ *   lastSent: "2025-11-01T14:30:00.000Z"
+ * }
+ */
+export const sendWishDuplicateErrorSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+  lastSent: z.date().or(z.string()), // When wish was previously sent
 });
 
 // ============================================================
@@ -147,3 +181,4 @@ export type BirthdaysListResponse = z.infer<typeof birthdaysListResponseSchema>;
 export type SingleBirthdayResponse = z.infer<typeof singleBirthdayResponseSchema>;
 export type DeleteBirthdayResponse = z.infer<typeof deleteBirthdayResponseSchema>;
 export type SendWishResponse = z.infer<typeof sendWishResponseSchema>;
+export type SendWishDuplicateError = z.infer<typeof sendWishDuplicateErrorSchema>;

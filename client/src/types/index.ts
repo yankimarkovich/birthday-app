@@ -21,6 +21,7 @@ export interface Birthday {
   email?: string;
   phone?: string;
   notes?: string;
+  lastWishSent?: string; // NEW: ISO date string of when wish was last sent
   createdAt: string;
   updatedAt: string;
 }

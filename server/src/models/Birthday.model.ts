@@ -7,6 +7,7 @@ export interface IBirthday extends Document {
   email?: string;
   phone?: string;
   notes?: string;
+  lastWishSent?: Date; // NEW: Track when wish was last sent
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +44,13 @@ const birthdaySchema = new Schema<IBirthday>(
       type: String,
       maxlength: [500, 'Notes cannot exceed 500 characters'],
     },
+    lastWishSent: {
+      type: Date,
+      required: false,
+      // Why optional: Existing birthdays won't have this field
+      // Why Date type: Stores full timestamp, we'll compare years
+      // Why no default: undefined means "never sent"
+    },
   },
   {
     timestamps: true,
@@ -50,6 +58,7 @@ const birthdaySchema = new Schema<IBirthday>(
 );
 
 // Compound index for efficient queries
+// Why we filter by userId first in all queries (multi-tenant)
 birthdaySchema.index({ userId: 1, date: 1 });
 
 export const Birthday = mongoose.model<IBirthday>('Birthday', birthdaySchema);

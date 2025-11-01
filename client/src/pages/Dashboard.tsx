@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import AddBirthdayDialog from '@/components/AddBirthdayDialog';
 import EditBirthdayDialog from '@/components/EditBirthdayDialog';
-import { nextOccurrence, isToday } from '@/lib/date';
+import { nextOccurrence, isToday, wasWishSentThisYear } from '@/lib/date';
 import { Countdown } from '@/components/Countdown';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,22 +24,16 @@ import type { Birthday } from '@/types';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
-  // Changed: default is now 'today', and added 'month' option
   const [view, setView] = useState<'today' | 'month' | 'calendar' | 'all'>('today');
-
-  // Dialog state management
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
-
-  // Hooks must be at top level
   const { toast } = useToast();
   const del = useDeleteBirthday();
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Modern gradient header with better spacing */}
       <header className="border-b border-border bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
         <div className="container mx-auto flex items-center justify-between px-6 py-5">
           <h1 className="text-2xl font-bold text-foreground tracking-tight">🎂 Birthday App</h1>
@@ -53,7 +47,6 @@ export default function Dashboard() {
       </header>
 
       <main className="container mx-auto px-6 py-8 space-y-8">
-        {/* Updated toggle with 4 tabs */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center rounded-xl border-2 border-border bg-card p-1.5 shadow-sm">
             <Toggle value="today" current={view} onChange={setView} label="Today" />
@@ -61,14 +54,11 @@ export default function Dashboard() {
             <Toggle value="calendar" current={view} onChange={setView} label="Calendar" />
             <Toggle value="all" current={view} onChange={setView} label="All" />
           </div>
-
-          {/* Dashboard owns the Add button */}
           <Button onClick={() => setAddDialogOpen(true)} className="font-medium" size="default">
             Add Birthday
           </Button>
         </div>
 
-        {/* Today tab - default view */}
         {view === 'today' && (
           <section className="space-y-4">
             <TodayList
@@ -84,7 +74,6 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* This Month tab - lazy loaded */}
         {view === 'month' && (
           <section className="space-y-4">
             <ThisMonthList
@@ -100,7 +89,6 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* Calendar tab - lazy loaded */}
         {view === 'calendar' && (
           <section className="space-y-4">
             <CalendarView
@@ -116,7 +104,6 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* All tab - lazy loaded */}
         {view === 'all' && (
           <section className="space-y-4">
             <BirthdayList
@@ -133,7 +120,6 @@ export default function Dashboard() {
         )}
       </main>
 
-      {/* Dialogs controlled by Dashboard */}
       <AddBirthdayDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
 
       {selectedBirthday && (
@@ -143,7 +129,6 @@ export default function Dashboard() {
             onOpenChange={setEditDialogOpen}
             birthday={selectedBirthday}
           />
-
           <ConfirmDeleteDialog
             open={deleteDialogOpen}
             onOpenChange={setDeleteDialogOpen}
@@ -192,11 +177,6 @@ function Toggle({
   );
 }
 
-/**
- * TodayList - Shows birthdays happening today
- * Uses useTodaysBirthdays() which fetches from /birthdays/today endpoint
- * This is the default view - typically 2-5 records
- */
 function TodayList({
   onEdit,
   onDelete,
@@ -205,7 +185,6 @@ function TodayList({
   onDelete: (birthday: Birthday) => void;
 }) {
   const { toast } = useToast();
-  // Uses new hook that fetches only today's birthdays from server
   const { data, isLoading, isError, refetch } = useTodaysBirthdays();
   const sendWish = useSendWish();
 
@@ -237,72 +216,76 @@ function TodayList({
     );
   }
 
-  // Server already filtered by today's date, just display
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
-      {data.data.map((b) => (
-        <li
-          key={b._id}
-          className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
-        >
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="text-foreground font-semibold text-lg">{b.name}</div>
-              <Badge
-                variant="default"
-                className="bg-accent text-accent-foreground text-sm px-3 py-1"
+      {data.data.map((b) => {
+        const alreadySent = wasWishSentThisYear(b.lastWishSent);
+        return (
+          <li
+            key={b._id}
+            className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
+          >
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="text-foreground font-semibold text-lg">{b.name}</div>
+                <Badge
+                  variant="default"
+                  className="bg-accent text-accent-foreground text-sm px-3 py-1"
+                >
+                  Today! 🎉
+                </Badge>
+              </div>
+              <div className="text-base text-muted-foreground mt-1">
+                {format(new Date(b.date), 'MMM d, yyyy')}
+                {alreadySent && b.lastWishSent && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    • Wished on {format(new Date(b.lastWishSent), 'MMM d')}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => onEdit(b)}
+                className="font-medium"
               >
-                Today! 🎉
-              </Badge>
+                Edit
+              </Button>
+              <Button
+                variant={alreadySent ? 'secondary' : 'default'}
+                size="default"
+                disabled={alreadySent || sendWish.isPending}
+                onClick={async () => {
+                  try {
+                    await sendWish.mutateAsync(b._id);
+                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                  } catch (error: any) {
+                    const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+                  }
+                }}
+                className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {alreadySent ? 'Wish Sent ✓' : 'Send Wish'}
+              </Button>
+              <Button
+                variant="destructive"
+                size="default"
+                onClick={() => onDelete(b)}
+                className="font-medium"
+              >
+                Delete
+              </Button>
             </div>
-            <div className="text-base text-muted-foreground mt-1">
-              {format(new Date(b.date), 'MMM d, yyyy')}
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="default"
-              onClick={() => onEdit(b)}
-              className="font-medium"
-            >
-              Edit
-            </Button>
-            <Button
-              variant="default"
-              size="default"
-              onClick={async () => {
-                try {
-                  await sendWish.mutateAsync(b._id);
-                  toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
-                } catch {
-                  toast({ title: 'Error', description: 'Failed to send wish' });
-                }
-              }}
-              className="font-medium"
-            >
-              Send Wish
-            </Button>
-            <Button
-              variant="destructive"
-              size="default"
-              onClick={() => onDelete(b)}
-              className="font-medium"
-            >
-              Delete
-            </Button>
-          </div>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }
 
-/**
- * ThisMonthList - Shows birthdays happening this month
- * Uses useThisMonthsBirthdays() which fetches from /birthdays/this-month endpoint
- * Typically 10-20 records - good for planning ahead
- */
 function ThisMonthList({
   onEdit,
   onDelete,
@@ -311,7 +294,6 @@ function ThisMonthList({
   onDelete: (birthday: Birthday) => void;
 }) {
   const { toast } = useToast();
-  // Uses new hook that fetches only this month's birthdays from server
   const { data, isLoading, isError, refetch } = useThisMonthsBirthdays();
   const sendWish = useSendWish();
 
@@ -341,15 +323,14 @@ function ThisMonthList({
     );
   }
 
-  // Calculate next occurrence and sort by soonest
   const enriched = data.data.map((b) => {
     const next = nextOccurrence(b.date);
     const daysUntil = Math.floor((next.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     const isTodayBirthday = isToday(b.date);
-    return { ...b, next, daysUntil, isTodayBirthday };
+    const alreadySent = wasWishSentThisYear(b.lastWishSent);
+    return { ...b, next, daysUntil, isTodayBirthday, alreadySent };
   });
 
-  // Sort by days until next birthday (soonest first)
   const sorted = enriched.sort((a, b) => a.daysUntil - b.daysUntil);
 
   return (
@@ -376,6 +357,11 @@ function ThisMonthList({
               <span className="font-bold text-foreground">
                 <Countdown target={b.next} />
               </span>
+              {b.alreadySent && b.lastWishSent && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  • Wished on {format(new Date(b.lastWishSent), 'MMM d')}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex gap-3">
@@ -388,20 +374,21 @@ function ThisMonthList({
               Edit
             </Button>
             <Button
-              variant="default"
+              variant={b.alreadySent ? 'secondary' : 'default'}
               size="default"
-              disabled={!b.isTodayBirthday}
+              disabled={b.alreadySent || sendWish.isPending}
               onClick={async () => {
                 try {
                   await sendWish.mutateAsync(b._id);
                   toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
-                } catch {
-                  toast({ title: 'Error', description: 'Failed to send wish' });
+                } catch (error: any) {
+                  const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                  toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
                 }
               }}
-              className="font-medium"
+              className={`font-medium ${b.alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Send Wish
+              {b.alreadySent ? 'Wish Sent ✓' : 'Send Wish'}
             </Button>
             <Button
               variant="destructive"
@@ -418,10 +405,6 @@ function ThisMonthList({
   );
 }
 
-/**
- * BirthdayList - Shows ALL birthdays
- * Now with lazy loading - only fetches when "All" tab is active
- */
 function BirthdayList({
   onEdit,
   onDelete,
@@ -430,7 +413,6 @@ function BirthdayList({
   onDelete: (birthday: Birthday) => void;
 }) {
   const { toast } = useToast();
-  // Now fetches all birthdays (same as before, but component only renders when tab is active)
   const { data, isLoading, isError, refetch } = useBirthdays();
   const sendWish = useSendWish();
 
@@ -466,6 +448,7 @@ function BirthdayList({
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {data.data.map((b) => {
         const isTodayBirthday = isToday(b.date);
+        const alreadySent = wasWishSentThisYear(b.lastWishSent);
         return (
           <li
             key={b._id}
@@ -475,6 +458,11 @@ function BirthdayList({
               <div className="text-foreground font-semibold text-lg">{b.name}</div>
               <div className="text-base text-muted-foreground mt-1">
                 {format(new Date(b.date), 'PPP')}
+                {alreadySent && b.lastWishSent && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    • Wished on {format(new Date(b.lastWishSent), 'MMM d')}
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex gap-3">
@@ -487,20 +475,21 @@ function BirthdayList({
                 Edit
               </Button>
               <Button
-                variant="default"
+                variant={alreadySent ? 'secondary' : 'default'}
                 size="default"
-                disabled={!isTodayBirthday}
+                disabled={alreadySent || sendWish.isPending}
                 onClick={async () => {
                   try {
                     await sendWish.mutateAsync(b._id);
                     toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
-                  } catch {
-                    toast({ title: 'Error', description: 'Failed to send wish' });
+                  } catch (error: any) {
+                    const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
                   }
                 }}
-                className="font-medium"
+                className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Send Wish
+                {alreadySent ? 'Wish Sent ✓' : 'Send Wish'}
               </Button>
               <Button
                 variant="destructive"
@@ -518,10 +507,6 @@ function BirthdayList({
   );
 }
 
-/**
- * CalendarView - Shows calendar with birthday indicators
- * Now with lazy loading - only fetches when "Calendar" tab is active
- */
 function CalendarView({
   onEdit,
   onDelete,
@@ -529,16 +514,13 @@ function CalendarView({
   onEdit: (birthday: Birthday) => void;
   onDelete: (birthday: Birthday) => void;
 }) {
-  // Fetches all birthdays for calendar indicators
   const { data, isLoading, isError, refetch } = useBirthdays();
   const { toast } = useToast();
   const sendWish = useSendWish();
   const [selected, setSelected] = useState<Date | undefined>(new Date());
 
-  // Source list for hooks to avoid conditional hook calls
   const source = React.useMemo(() => data?.data ?? [], [data]);
 
-  // Map birthdays to date-key for quick lookup (month-day only, ignore year)
   const byDay = useMemo(() => {
     const map = new Map<string, typeof source>();
     for (const b of source) {
@@ -596,7 +578,6 @@ function CalendarView({
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start">
-      {/* Calendar container - natural size, sticky */}
       <div className="bg-card border-2 border-border rounded-xl shadow-lg overflow-hidden lg:sticky lg:top-8">
         <div className="p-6">
           <Calendar
@@ -669,7 +650,6 @@ function CalendarView({
         </div>
       </div>
 
-      {/* Selected day details - natural height with max-height scroll */}
       <div className="space-y-4">
         <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-border rounded-xl p-6 shadow-lg">
           <h3 className="text-xl font-bold text-foreground">
@@ -689,6 +669,7 @@ function CalendarView({
               <ul className="divide-y-2 divide-border">
                 {selectedList.map((b) => {
                   const isTodayBirthday = isToday(b.date);
+                  const alreadySent = wasWishSentThisYear(b.lastWishSent);
                   return (
                     <li
                       key={b._id}
@@ -698,6 +679,11 @@ function CalendarView({
                         <div className="text-foreground font-semibold text-lg">{b.name}</div>
                         <div className="text-base text-muted-foreground mt-1">
                           {format(new Date(b.date), 'PPP')}
+                          {alreadySent && b.lastWishSent && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              • Wished on {format(new Date(b.lastWishSent), 'MMM d')}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-3">
@@ -710,9 +696,9 @@ function CalendarView({
                           Edit
                         </Button>
                         <Button
-                          variant="default"
+                          variant={alreadySent ? 'secondary' : 'default'}
                           size="default"
-                          disabled={!isTodayBirthday}
+                          disabled={alreadySent || sendWish.isPending}
                           onClick={async () => {
                             try {
                               await sendWish.mutateAsync(b._id);
@@ -720,13 +706,18 @@ function CalendarView({
                                 title: 'Sent 🎉',
                                 description: `Wished ${b.name} a happy birthday`,
                               });
-                            } catch {
-                              toast({ title: 'Error', description: 'Failed to send wish' });
+                            } catch (error: any) {
+                              const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                              toast({
+                                title: 'Error',
+                                description: errorMsg,
+                                variant: 'destructive',
+                              });
                             }
                           }}
-                          className="font-medium"
+                          className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                          Send Wish
+                          {alreadySent ? 'Wish Sent ✓' : 'Send Wish'}
                         </Button>
                         <Button
                           variant="destructive"

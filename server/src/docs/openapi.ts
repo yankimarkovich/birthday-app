@@ -20,6 +20,7 @@ import {
   singleBirthdayResponseSchema,
   deleteBirthdayResponseSchema,
   sendWishResponseSchema,
+  sendWishDuplicateErrorSchema,
 } from '../schemas/birthday.schema';
 
 // Register component schemas with readable names
@@ -34,6 +35,7 @@ registry.register('BirthdaysListResponse', birthdaysListResponseSchema);
 registry.register('SingleBirthdayResponse', singleBirthdayResponseSchema);
 registry.register('DeleteBirthdayResponse', deleteBirthdayResponseSchema);
 registry.register('SendWishResponse', sendWishResponseSchema);
+registry.register('SendWishDuplicateError', sendWishDuplicateErrorSchema); // NEW
 
 // Health endpoint
 registry.registerPath({
@@ -69,9 +71,18 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Registration successful', content: { 'application/json': { schema: authResponseSchema } } },
-    400: { description: 'Validation error', content: { 'application/json': { schema: errorResponseSchema } } },
-    409: { description: 'Email already registered', content: { 'application/json': { schema: errorResponseSchema } } },
+    201: {
+      description: 'Registration successful',
+      content: { 'application/json': { schema: authResponseSchema } },
+    },
+    400: {
+      description: 'Validation error',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+    409: {
+      description: 'Email already registered',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -87,9 +98,18 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Login successful', content: { 'application/json': { schema: authResponseSchema } } },
-    400: { description: 'Validation error', content: { 'application/json': { schema: errorResponseSchema } } },
-    401: { description: 'Invalid credentials', content: { 'application/json': { schema: errorResponseSchema } } },
+    200: {
+      description: 'Login successful',
+      content: { 'application/json': { schema: authResponseSchema } },
+    },
+    400: {
+      description: 'Validation error',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+    401: {
+      description: 'Invalid credentials',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -98,10 +118,58 @@ registry.registerPath({
   method: 'get',
   path: '/api/birthdays',
   tags: ['Birthdays'],
+  summary: 'Get all birthdays for authenticated user',
   security: [{ bearerAuth: [] }],
   responses: {
-    200: { description: 'List of birthdays for current user', content: { 'application/json': { schema: birthdaysListResponseSchema } } },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: errorResponseSchema } } },
+    200: {
+      description: 'List of all birthdays for current user',
+      content: { 'application/json': { schema: birthdaysListResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+  },
+});
+
+// NEW: Get today's birthdays
+registry.registerPath({
+  method: 'get',
+  path: '/api/birthdays/today',
+  tags: ['Birthdays'],
+  summary: "Get today's birthdays for authenticated user",
+  description: 'Returns birthdays happening today (filters by month and day, ignoring year)',
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "List of today's birthdays",
+      content: { 'application/json': { schema: birthdaysListResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+  },
+});
+
+// NEW: Get this month's birthdays
+registry.registerPath({
+  method: 'get',
+  path: '/api/birthdays/this-month',
+  tags: ['Birthdays'],
+  summary: "Get this month's birthdays for authenticated user",
+  description:
+    'Returns birthdays happening in the current month (filters by month, ignoring day and year)',
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "List of this month's birthdays",
+      content: { 'application/json': { schema: birthdaysListResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -109,6 +177,7 @@ registry.registerPath({
   method: 'post',
   path: '/api/birthdays',
   tags: ['Birthdays'],
+  summary: 'Create a new birthday',
   security: [{ bearerAuth: [] }],
   request: {
     body: {
@@ -118,9 +187,18 @@ registry.registerPath({
     },
   },
   responses: {
-    201: { description: 'Birthday created', content: { 'application/json': { schema: singleBirthdayResponseSchema } } },
-    400: { description: 'Validation error', content: { 'application/json': { schema: errorResponseSchema } } },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: errorResponseSchema } } },
+    201: {
+      description: 'Birthday created',
+      content: { 'application/json': { schema: singleBirthdayResponseSchema } },
+    },
+    400: {
+      description: 'Validation error',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -128,12 +206,22 @@ registry.registerPath({
   method: 'get',
   path: '/api/birthdays/{id}',
   tags: ['Birthdays'],
+  summary: 'Get birthday by ID',
   security: [{ bearerAuth: [] }],
   request: { params: mongoIdSchema },
   responses: {
-    200: { description: 'Birthday by id', content: { 'application/json': { schema: singleBirthdayResponseSchema } } },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: errorResponseSchema } } },
-    404: { description: 'Not found', content: { 'application/json': { schema: errorResponseSchema } } },
+    200: {
+      description: 'Birthday by id',
+      content: { 'application/json': { schema: singleBirthdayResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+    404: {
+      description: 'Birthday not found',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -141,6 +229,7 @@ registry.registerPath({
   method: 'patch',
   path: '/api/birthdays/{id}',
   tags: ['Birthdays'],
+  summary: 'Update birthday',
   security: [{ bearerAuth: [] }],
   request: {
     params: mongoIdSchema,
@@ -151,10 +240,22 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Birthday updated', content: { 'application/json': { schema: singleBirthdayResponseSchema } } },
-    400: { description: 'Validation error', content: { 'application/json': { schema: errorResponseSchema } } },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: errorResponseSchema } } },
-    404: { description: 'Not found', content: { 'application/json': { schema: errorResponseSchema } } },
+    200: {
+      description: 'Birthday updated',
+      content: { 'application/json': { schema: singleBirthdayResponseSchema } },
+    },
+    400: {
+      description: 'Validation error',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+    404: {
+      description: 'Birthday not found',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
   },
 });
 
@@ -162,26 +263,51 @@ registry.registerPath({
   method: 'delete',
   path: '/api/birthdays/{id}',
   tags: ['Birthdays'],
+  summary: 'Delete birthday',
   security: [{ bearerAuth: [] }],
   request: { params: mongoIdSchema },
   responses: {
-    200: { description: 'Birthday deleted', content: { 'application/json': { schema: deleteBirthdayResponseSchema } } },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: errorResponseSchema } } },
-    404: { description: 'Not found', content: { 'application/json': { schema: errorResponseSchema } } },
+    200: {
+      description: 'Birthday deleted',
+      content: { 'application/json': { schema: deleteBirthdayResponseSchema } },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+    404: {
+      description: 'Birthday not found',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
   },
 });
 
-// Birthdays: send wish
+// UPDATED: Birthdays: send wish (now with 400 duplicate error response)
 registry.registerPath({
   method: 'post',
   path: '/api/birthdays/{id}/wish',
   tags: ['Birthdays'],
+  summary: 'Send birthday wish',
+  description: 'Sends a birthday wish and saves the timestamp. Can only be sent once per year.',
   security: [{ bearerAuth: [] }],
   request: { params: mongoIdSchema },
   responses: {
-    200: { description: 'Wish logged', content: { 'application/json': { schema: sendWishResponseSchema } } },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: errorResponseSchema } } },
-    404: { description: 'Not found', content: { 'application/json': { schema: errorResponseSchema } } },
+    200: {
+      description: 'Wish sent successfully',
+      content: { 'application/json': { schema: sendWishResponseSchema } },
+    },
+    400: {
+      description: 'Birthday wish already sent this year',
+      content: { 'application/json': { schema: sendWishDuplicateErrorSchema } }, // NEW: Specific error schema
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
+    404: {
+      description: 'Birthday not found',
+      content: { 'application/json': { schema: errorResponseSchema } },
+    },
   },
 });
 
