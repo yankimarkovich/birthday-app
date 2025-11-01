@@ -52,6 +52,8 @@ export const getBirthdays = async (req: Request, res: Response) => {
       date: 1,
     });
 
+    (req.log || logger).info(`Found ${birthdays.length} birthdays for user ${req.user.email}`);
+
     return res.status(200).json({
       success: true,
       count: birthdays.length,
@@ -59,6 +61,107 @@ export const getBirthdays = async (req: Request, res: Response) => {
     });
   } catch (error) {
     (req.log || logger).error(`Get birthdays failure: ${(error as Error).message}`);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+};
+
+/**
+ * Get birthdays happening today
+ * Filters by month and day only (ignores year since birthdays repeat annually)
+ * Uses MongoDB aggregation operators for efficient server-side filtering
+ */
+export const getTodaysBirthdays = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+    }
+
+    // Get current date in server timezone (TODO: use user timezone from Task 6)
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1; // MongoDB months are 1-indexed (1-12)
+    const currentDay = today.getDate(); // Day of month (1-31)
+
+    // Query explanation:
+    // - $expr allows us to use aggregation operators in find()
+    // - $month extracts month number from date field (1-12)
+    // - $dayOfMonth extracts day number from date field (1-31)
+    // - We match ONLY month and day, ignoring year (birthdays repeat annually)
+    // - userId filter ensures user only sees their own birthdays
+    const birthdays = await Birthday.find({
+      userId: req.user.userId,
+      $expr: {
+        $and: [
+          { $eq: [{ $month: '$date' }, currentMonth] },
+          { $eq: [{ $dayOfMonth: '$date' }, currentDay] },
+        ],
+      },
+    }).sort({ date: 1 });
+
+    (req.log || logger).info(
+      `Found ${birthdays.length} birthdays today (${currentMonth}/${currentDay}) for user ${req.user.email}`
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: birthdays.length,
+      data: birthdays,
+    });
+  } catch (error) {
+    (req.log || logger).error(`Get today's birthdays failure: ${(error as Error).message}`);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+};
+
+/**
+ * Get birthdays happening this month
+ * Filters by month only (ignores day and year)
+ * Useful for "This Month" tab to show upcoming birthdays
+ */
+export const getThisMonthsBirthdays = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+      });
+    }
+
+    // Get current month in server timezone (TODO: use user timezone from Task 6)
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1; // MongoDB months are 1-indexed (1-12)
+
+    // Query explanation:
+    // - $expr with $month extracts month from date field
+    // - We match ONLY the month, allowing all days and years
+    // - This returns all birthdays that happen in the current month
+    // - Sort by day within month for chronological display
+    const birthdays = await Birthday.find({
+      userId: req.user.userId,
+      $expr: {
+        $eq: [{ $month: '$date' }, currentMonth],
+      },
+    }).sort({ date: 1 });
+
+    (req.log || logger).info(
+      `Found ${birthdays.length} birthdays this month (month ${currentMonth}) for user ${req.user.email}`
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: birthdays.length,
+      data: birthdays,
+    });
+  } catch (error) {
+    (req.log || logger).error(`Get this month's birthdays failure: ${(error as Error).message}`);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
@@ -202,7 +305,9 @@ export const sendBirthdayWish = async (req: Request, res: Response) => {
     }
 
     // Server-side log of the wish action (core assignment requirement)
-    (req.log || logger).info(`Happy Birthday sent to ${birthday.name} (id=${id}) by ${req.user.email}`);
+    (req.log || logger).info(
+      `Happy Birthday sent to ${birthday.name} (id=${id}) by ${req.user.email}`
+    );
 
     return res.status(200).json({ success: true, message: 'Birthday wish logged successfully' });
   } catch (error) {

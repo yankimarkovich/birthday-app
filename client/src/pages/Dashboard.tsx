@@ -1,6 +1,12 @@
 import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/button';
-import { useBirthdays, useSendWish, useDeleteBirthday } from '@/hooks/useBirthdays';
+import {
+  useBirthdays,
+  useTodaysBirthdays,
+  useThisMonthsBirthdays,
+  useSendWish,
+  useDeleteBirthday,
+} from '@/hooks/useBirthdays';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import AddBirthdayDialog from '@/components/AddBirthdayDialog';
@@ -18,7 +24,8 @@ import type { Birthday } from '@/types';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
-  const [view, setView] = useState<'upcoming' | 'calendar' | 'all'>('upcoming');
+  // Changed: default is now 'today', and added 'month' option
+  const [view, setView] = useState<'today' | 'month' | 'calendar' | 'all'>('today');
 
   // Dialog state management
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -46,10 +53,11 @@ export default function Dashboard() {
       </header>
 
       <main className="container mx-auto px-6 py-8 space-y-8">
-        {/* Modern toggle with better spacing */}
+        {/* Updated toggle with 4 tabs */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center rounded-xl border-2 border-border bg-card p-1.5 shadow-sm">
-            <Toggle value="upcoming" current={view} onChange={setView} label="Upcoming" />
+            <Toggle value="today" current={view} onChange={setView} label="Today" />
+            <Toggle value="month" current={view} onChange={setView} label="This Month" />
             <Toggle value="calendar" current={view} onChange={setView} label="Calendar" />
             <Toggle value="all" current={view} onChange={setView} label="All" />
           </div>
@@ -60,9 +68,10 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {view === 'upcoming' && (
+        {/* Today tab - default view */}
+        {view === 'today' && (
           <section className="space-y-4">
-            <UpcomingList
+            <TodayList
               onEdit={(birthday) => {
                 setSelectedBirthday(birthday);
                 setEditDialogOpen(true);
@@ -75,6 +84,23 @@ export default function Dashboard() {
           </section>
         )}
 
+        {/* This Month tab - lazy loaded */}
+        {view === 'month' && (
+          <section className="space-y-4">
+            <ThisMonthList
+              onEdit={(birthday) => {
+                setSelectedBirthday(birthday);
+                setEditDialogOpen(true);
+              }}
+              onDelete={(birthday) => {
+                setSelectedBirthday(birthday);
+                setDeleteDialogOpen(true);
+              }}
+            />
+          </section>
+        )}
+
+        {/* Calendar tab - lazy loaded */}
         {view === 'calendar' && (
           <section className="space-y-4">
             <CalendarView
@@ -90,6 +116,7 @@ export default function Dashboard() {
           </section>
         )}
 
+        {/* All tab - lazy loaded */}
         {view === 'all' && (
           <section className="space-y-4">
             <BirthdayList
@@ -143,9 +170,9 @@ function Toggle({
   onChange,
   label,
 }: {
-  value: 'upcoming' | 'calendar' | 'all';
+  value: 'today' | 'month' | 'calendar' | 'all';
   current: string;
-  onChange: (v: 'upcoming' | 'calendar' | 'all') => void;
+  onChange: (v: 'today' | 'month' | 'calendar' | 'all') => void;
   label: string;
 }) {
   const active = current === value;
@@ -165,7 +192,12 @@ function Toggle({
   );
 }
 
-function UpcomingList({
+/**
+ * TodayList - Shows birthdays happening today
+ * Uses useTodaysBirthdays() which fetches from /birthdays/today endpoint
+ * This is the default view - typically 2-5 records
+ */
+function TodayList({
   onEdit,
   onDelete,
 }: {
@@ -173,7 +205,8 @@ function UpcomingList({
   onDelete: (birthday: Birthday) => void;
 }) {
   const { toast } = useToast();
-  const { data, isLoading, isError, refetch } = useBirthdays();
+  // Uses new hook that fetches only today's birthdays from server
+  const { data, isLoading, isError, refetch } = useTodaysBirthdays();
   const sendWish = useSendWish();
 
   if (isLoading) {
@@ -183,7 +216,7 @@ function UpcomingList({
   if (isError || !data) {
     return (
       <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
-        <p className="text-base font-medium">Failed to load birthdays.</p>
+        <p className="text-base font-medium">Failed to load today's birthdays.</p>
         <button
           className="underline text-base mt-2 hover:text-destructive/80"
           onClick={() => refetch()}
@@ -198,130 +231,13 @@ function UpcomingList({
     return (
       <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
         <p className="text-lg text-muted-foreground font-medium">
-          No birthdays yet. Add some to get started! 🎉
+          No birthdays today! 🎂 Check back tomorrow.
         </p>
       </div>
     );
   }
 
-  // Calculate next occurrence for each birthday and sort by soonest
-  const enriched = data.data.map((b) => {
-    const next = nextOccurrence(b.date);
-    const daysUntil = Math.floor((next.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return { ...b, next, daysUntil };
-  });
-
-  // Sort by days until next birthday (soonest first)
-  const sorted = enriched.sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 10);
-
-  return (
-    <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
-      {sorted.map((b) => {
-        const today = isToday(b.date);
-        return (
-          <li
-            key={b._id}
-            className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
-          >
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="text-foreground font-semibold text-lg">{b.name}</div>
-                {today && (
-                  <Badge
-                    variant="default"
-                    className="bg-accent text-accent-foreground text-sm px-3 py-1"
-                  >
-                    Today! 🎉
-                  </Badge>
-                )}
-              </div>
-              <div className="text-base text-muted-foreground mt-1">
-                {format(new Date(b.date), 'MMM d')} •{' '}
-                <span className="font-bold text-foreground">
-                  <Countdown target={b.next} />
-                </span>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                size="default"
-                onClick={() => onEdit(b)}
-                className="font-medium"
-              >
-                Edit
-              </Button>
-              <Button
-                variant="default"
-                size="default"
-                disabled={!today}
-                onClick={async () => {
-                  try {
-                    await sendWish.mutateAsync(b._id);
-                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
-                  } catch {
-                    toast({ title: 'Error', description: 'Failed to send wish' });
-                  }
-                }}
-                className="font-medium"
-              >
-                Send Wish
-              </Button>
-              <Button
-                variant="destructive"
-                size="default"
-                onClick={() => onDelete(b)}
-                className="font-medium"
-              >
-                Delete
-              </Button>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function BirthdayList({
-  onEdit,
-  onDelete,
-}: {
-  onEdit: (birthday: Birthday) => void;
-  onDelete: (birthday: Birthday) => void;
-}) {
-  const { toast } = useToast();
-  const { data, isLoading, isError, refetch } = useBirthdays();
-  const sendWish = useSendWish();
-
-  if (isLoading) {
-    return <Skeleton className="h-32 w-full rounded-xl" />;
-  }
-
-  if (isError || !data) {
-    return (
-      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
-        <p className="text-base font-medium">Failed to load birthdays.</p>
-        <button
-          className="underline text-base mt-2 hover:text-destructive/80"
-          onClick={() => refetch()}
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  if (data.count === 0) {
-    return (
-      <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
-        <p className="text-lg text-muted-foreground font-medium">
-          No birthdays yet. Add some to get started! 🎉
-        </p>
-      </div>
-    );
-  }
-
+  // Server already filtered by today's date, just display
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {data.data.map((b) => (
@@ -330,9 +246,17 @@ function BirthdayList({
           className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
         >
           <div>
-            <div className="text-foreground font-semibold text-lg">{b.name}</div>
+            <div className="flex items-center gap-3">
+              <div className="text-foreground font-semibold text-lg">{b.name}</div>
+              <Badge
+                variant="default"
+                className="bg-accent text-accent-foreground text-sm px-3 py-1"
+              >
+                Today! 🎉
+              </Badge>
+            </div>
             <div className="text-base text-muted-foreground mt-1">
-              {format(new Date(b.date), 'PPP')}
+              {format(new Date(b.date), 'MMM d, yyyy')}
             </div>
           </div>
           <div className="flex gap-3">
@@ -374,6 +298,230 @@ function BirthdayList({
   );
 }
 
+/**
+ * ThisMonthList - Shows birthdays happening this month
+ * Uses useThisMonthsBirthdays() which fetches from /birthdays/this-month endpoint
+ * Typically 10-20 records - good for planning ahead
+ */
+function ThisMonthList({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: (birthday: Birthday) => void;
+  onDelete: (birthday: Birthday) => void;
+}) {
+  const { toast } = useToast();
+  // Uses new hook that fetches only this month's birthdays from server
+  const { data, isLoading, isError, refetch } = useThisMonthsBirthdays();
+  const sendWish = useSendWish();
+
+  if (isLoading) {
+    return <Skeleton className="h-32 w-full rounded-xl" />;
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
+        <p className="text-base font-medium">Failed to load this month's birthdays.</p>
+        <button
+          className="underline text-base mt-2 hover:text-destructive/80"
+          onClick={() => refetch()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (data.count === 0) {
+    return (
+      <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
+        <p className="text-lg text-muted-foreground font-medium">No birthdays this month! 🎂</p>
+      </div>
+    );
+  }
+
+  // Calculate next occurrence and sort by soonest
+  const enriched = data.data.map((b) => {
+    const next = nextOccurrence(b.date);
+    const daysUntil = Math.floor((next.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const isTodayBirthday = isToday(b.date);
+    return { ...b, next, daysUntil, isTodayBirthday };
+  });
+
+  // Sort by days until next birthday (soonest first)
+  const sorted = enriched.sort((a, b) => a.daysUntil - b.daysUntil);
+
+  return (
+    <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
+      {sorted.map((b) => (
+        <li
+          key={b._id}
+          className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
+        >
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="text-foreground font-semibold text-lg">{b.name}</div>
+              {b.isTodayBirthday && (
+                <Badge
+                  variant="default"
+                  className="bg-accent text-accent-foreground text-sm px-3 py-1"
+                >
+                  Today! 🎉
+                </Badge>
+              )}
+            </div>
+            <div className="text-base text-muted-foreground mt-1">
+              {format(new Date(b.date), 'MMM d')} •{' '}
+              <span className="font-bold text-foreground">
+                <Countdown target={b.next} />
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => onEdit(b)}
+              className="font-medium"
+            >
+              Edit
+            </Button>
+            <Button
+              variant="default"
+              size="default"
+              disabled={!b.isTodayBirthday}
+              onClick={async () => {
+                try {
+                  await sendWish.mutateAsync(b._id);
+                  toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                } catch {
+                  toast({ title: 'Error', description: 'Failed to send wish' });
+                }
+              }}
+              className="font-medium"
+            >
+              Send Wish
+            </Button>
+            <Button
+              variant="destructive"
+              size="default"
+              onClick={() => onDelete(b)}
+              className="font-medium"
+            >
+              Delete
+            </Button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * BirthdayList - Shows ALL birthdays
+ * Now with lazy loading - only fetches when "All" tab is active
+ */
+function BirthdayList({
+  onEdit,
+  onDelete,
+}: {
+  onEdit: (birthday: Birthday) => void;
+  onDelete: (birthday: Birthday) => void;
+}) {
+  const { toast } = useToast();
+  // Now fetches all birthdays (same as before, but component only renders when tab is active)
+  const { data, isLoading, isError, refetch } = useBirthdays();
+  const sendWish = useSendWish();
+
+  if (isLoading) {
+    return <Skeleton className="h-32 w-full rounded-xl" />;
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
+        <p className="text-base font-medium">Failed to load birthdays.</p>
+        <button
+          className="underline text-base mt-2 hover:text-destructive/80"
+          onClick={() => refetch()}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (data.count === 0) {
+    return (
+      <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
+        <p className="text-lg text-muted-foreground font-medium">
+          No birthdays yet. Add some to get started! 🎉
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
+      {data.data.map((b) => {
+        const isTodayBirthday = isToday(b.date);
+        return (
+          <li
+            key={b._id}
+            className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
+          >
+            <div>
+              <div className="text-foreground font-semibold text-lg">{b.name}</div>
+              <div className="text-base text-muted-foreground mt-1">
+                {format(new Date(b.date), 'PPP')}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => onEdit(b)}
+                className="font-medium"
+              >
+                Edit
+              </Button>
+              <Button
+                variant="default"
+                size="default"
+                disabled={!isTodayBirthday}
+                onClick={async () => {
+                  try {
+                    await sendWish.mutateAsync(b._id);
+                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                  } catch {
+                    toast({ title: 'Error', description: 'Failed to send wish' });
+                  }
+                }}
+                className="font-medium"
+              >
+                Send Wish
+              </Button>
+              <Button
+                variant="destructive"
+                size="default"
+                onClick={() => onDelete(b)}
+                className="font-medium"
+              >
+                Delete
+              </Button>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/**
+ * CalendarView - Shows calendar with birthday indicators
+ * Now with lazy loading - only fetches when "Calendar" tab is active
+ */
 function CalendarView({
   onEdit,
   onDelete,
@@ -381,6 +529,7 @@ function CalendarView({
   onEdit: (birthday: Birthday) => void;
   onDelete: (birthday: Birthday) => void;
 }) {
+  // Fetches all birthdays for calendar indicators
   const { data, isLoading, isError, refetch } = useBirthdays();
   const { toast } = useToast();
   const sendWish = useSendWish();
@@ -538,56 +687,59 @@ function CalendarView({
           <div className="bg-card border-2 border-border rounded-xl shadow-lg overflow-hidden">
             <div className="max-h-[470px] overflow-y-auto">
               <ul className="divide-y-2 divide-border">
-                {selectedList.map((b) => (
-                  <li
-                    key={b._id}
-                    className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
-                  >
-                    <div>
-                      <div className="text-foreground font-semibold text-lg">{b.name}</div>
-                      <div className="text-base text-muted-foreground mt-1">
-                        {format(new Date(b.date), 'PPP')}
+                {selectedList.map((b) => {
+                  const isTodayBirthday = isToday(b.date);
+                  return (
+                    <li
+                      key={b._id}
+                      className="flex items-center justify-between p-6 hover:bg-muted/30 transition-colors"
+                    >
+                      <div>
+                        <div className="text-foreground font-semibold text-lg">{b.name}</div>
+                        <div className="text-base text-muted-foreground mt-1">
+                          {format(new Date(b.date), 'PPP')}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        size="default"
-                        onClick={() => onEdit(b)}
-                        className="font-medium"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="default"
-                        disabled={!isToday(b.date)}
-                        onClick={async () => {
-                          try {
-                            await sendWish.mutateAsync(b._id);
-                            toast({
-                              title: 'Sent 🎉',
-                              description: `Wished ${b.name} a happy birthday`,
-                            });
-                          } catch {
-                            toast({ title: 'Error', description: 'Failed to send wish' });
-                          }
-                        }}
-                        className="font-medium"
-                      >
-                        Send Wish
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="default"
-                        onClick={() => onDelete(b)}
-                        className="font-medium"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </li>
-                ))}
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          size="default"
+                          onClick={() => onEdit(b)}
+                          className="font-medium"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="default"
+                          disabled={!isTodayBirthday}
+                          onClick={async () => {
+                            try {
+                              await sendWish.mutateAsync(b._id);
+                              toast({
+                                title: 'Sent 🎉',
+                                description: `Wished ${b.name} a happy birthday`,
+                              });
+                            } catch {
+                              toast({ title: 'Error', description: 'Failed to send wish' });
+                            }
+                          }}
+                          className="font-medium"
+                        >
+                          Send Wish
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="default"
+                          onClick={() => onDelete(b)}
+                          className="font-medium"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
