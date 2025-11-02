@@ -100,6 +100,11 @@ const lastNames = [
 
 const emails = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com'];
 
+// Sleep function to add delay between requests (avoid rate limiting)
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function randomName() {
   const first = firstNames[Math.floor(Math.random() * firstNames.length)];
   const last = lastNames[Math.floor(Math.random() * lastNames.length)];
@@ -253,10 +258,12 @@ async function seedTestData() {
     }
 
     // 4. Create all birthdays
-    console.log(`\n🚀 Uploading ${birthdays.length} birthdays to server...\n`);
+    console.log(`\n🚀 Uploading ${birthdays.length} birthdays to server...`);
+    console.log('⏱️  Adding 200ms delay between requests to avoid rate limiting\n');
 
     let successCount = 0;
     let errorCount = 0;
+    const startTime = Date.now();
 
     for (let i = 0; i < birthdays.length; i++) {
       try {
@@ -264,23 +271,36 @@ async function seedTestData() {
         successCount++;
 
         if ((i + 1) % 10 === 0) {
-          console.log(`Progress: ${i + 1}/${birthdays.length} birthdays created`);
+          const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+          const rate = ((i + 1) / (elapsed / 60)).toFixed(1);
+          console.log(
+            `Progress: ${i + 1}/${birthdays.length} | ${elapsed}s elapsed | ~${rate} req/min`
+          );
         }
+
+        // Add 200ms delay between requests to avoid rate limiting (5 req/sec = 300 req/min)
+        // Server limit is 200 req per 15 min, so this keeps us well under the limit
+        await sleep(200);
       } catch (error) {
         errorCount++;
         if (errorCount <= 3) {
           // Only show first 3 errors to avoid spam
           console.error(`❌ Error creating birthday #${i + 1}:`, error.message);
         }
+        // Add longer delay after error (might be rate limit)
+        await sleep(1000);
       }
     }
+
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
     console.log('\n═══════════════════════════════════════════');
     console.log('✅ Seeding complete!\n');
     console.log(`📊 Summary:`);
     console.log(`   - Total birthdays: ${birthdays.length}`);
     console.log(`   - Successfully created: ${successCount}`);
-    console.log(`   - Errors: ${errorCount}\n`);
+    console.log(`   - Errors: ${errorCount}`);
+    console.log(`   - Time taken: ${totalTime}s\n`);
 
     console.log(`🎉 Today's birthdays: 10 birthdays for ${todayFormatted}`);
 
