@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useUpdateBirthday } from '@/hooks/useBirthdays';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import type { Birthday } from '@/types';
 import { format } from 'date-fns';
 
@@ -32,7 +32,6 @@ export default function EditBirthdayDialog({
   onOpenChange: (open: boolean) => void;
   birthday: Birthday;
 }) {
-  const { toast } = useToast();
   const updateBirthday = useUpdateBirthday();
 
   const {
@@ -57,10 +56,10 @@ export default function EditBirthdayDialog({
   const onSubmit = async (values: FormData) => {
     try {
       await updateBirthday.mutateAsync({ id: birthday._id, payload: values });
-      toast({ title: 'Updated', description: `Saved changes for ${values.name}` });
+      toast.success(`Saved changes for ${values.name}`);
       onOpenChange(false); // Close via prop
     } catch {
-      toast({ title: 'Error', description: 'Failed to update birthday' });
+      toast.error('Failed to update birthday');
     }
   };
 

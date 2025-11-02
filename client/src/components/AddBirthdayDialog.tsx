@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateBirthday } from '@/hooks/useBirthdays';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100),
@@ -27,7 +27,6 @@ export default function AddBirthdayDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { toast } = useToast();
   const createBirthday = useCreateBirthday();
 
   const {
@@ -40,11 +39,11 @@ export default function AddBirthdayDialog({
   const onSubmit = async (values: FormData) => {
     try {
       await createBirthday.mutateAsync(values);
-      toast({ title: 'Added', description: `Created birthday for ${values.name}` });
+      toast.success(`Created birthday for ${values.name}`);
       reset();
       onOpenChange(false); // Close via prop
     } catch {
-      toast({ title: 'Error', description: 'Failed to create birthday' });
+      toast.error('Failed to create birthday');
     }
   };
 

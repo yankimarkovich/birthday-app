@@ -7,7 +7,7 @@ import {
   useSendWish,
   useDeleteBirthday,
 } from '@/hooks/useBirthdays';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import AddBirthdayDialog from '@/components/AddBirthdayDialog';
 import EditBirthdayDialog from '@/components/EditBirthdayDialog';
@@ -29,7 +29,6 @@ export default function Dashboard() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
-  const { toast } = useToast();
   const del = useDeleteBirthday();
 
   return (
@@ -137,9 +136,9 @@ export default function Dashboard() {
             onConfirm={async () => {
               try {
                 await del.mutateAsync(selectedBirthday._id);
-                toast({ title: 'Deleted', description: `${selectedBirthday.name} removed` });
+                toast.success(`${selectedBirthday.name} removed`);
               } catch {
-                toast({ title: 'Error', description: 'Failed to delete' });
+                toast.error('Failed to delete');
               }
             }}
           />
@@ -184,7 +183,6 @@ function TodayList({
   onEdit: (birthday: Birthday) => void;
   onDelete: (birthday: Birthday) => void;
 }) {
-  const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useTodaysBirthdays();
   const sendWish = useSendWish();
 
@@ -261,10 +259,10 @@ function TodayList({
                 onClick={async () => {
                   try {
                     await sendWish.mutateAsync(b._id);
-                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                    toast.success(`Wished ${b.name} a happy birthday 🎉`);
                   } catch (error: any) {
                     const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+                    toast.error(errorMsg);
                   }
                 }}
                 className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -294,7 +292,6 @@ function ThisMonthList({
   onEdit: (birthday: Birthday) => void;
   onDelete: (birthday: Birthday) => void;
 }) {
-  const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useThisMonthsBirthdays();
   const sendWish = useSendWish();
 
@@ -384,10 +381,10 @@ function ThisMonthList({
                 onClick={async () => {
                   try {
                     await sendWish.mutateAsync(b._id);
-                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                    toast.success(`Wished ${b.name} a happy birthday 🎉`);
                   } catch (error: any) {
                     const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+                    toast.error(errorMsg);
                   }
                 }}
                 className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -417,7 +414,6 @@ function BirthdayList({
   onEdit: (birthday: Birthday) => void;
   onDelete: (birthday: Birthday) => void;
 }) {
-  const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useBirthdays();
   const sendWish = useSendWish();
 
@@ -487,10 +483,10 @@ function BirthdayList({
                 onClick={async () => {
                   try {
                     await sendWish.mutateAsync(b._id);
-                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                    toast.success(`Wished ${b.name} a happy birthday 🎉`);
                   } catch (error: any) {
                     const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+                    toast.error(errorMsg);
                   }
                 }}
                 className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -521,7 +517,6 @@ function CalendarView({
   onDelete: (birthday: Birthday) => void;
 }) {
   const { data, isLoading, isError, refetch } = useBirthdays();
-  const { toast } = useToast();
   const sendWish = useSendWish();
   const [selected, setSelected] = useState<Date | undefined>(new Date());
 
@@ -709,17 +704,10 @@ function CalendarView({
                           onClick={async () => {
                             try {
                               await sendWish.mutateAsync(b._id);
-                              toast({
-                                title: 'Sent 🎉',
-                                description: `Wished ${b.name} a happy birthday`,
-                              });
+                              toast.success(`Wished ${b.name} a happy birthday 🎉`);
                             } catch (error: any) {
                               const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                              toast({
-                                title: 'Error',
-                                description: errorMsg,
-                                variant: 'destructive',
-                              });
+                              toast.error(errorMsg);
                             }
                           }}
                           className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
