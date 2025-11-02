@@ -7,7 +7,7 @@ import {
   useSendWish,
   useDeleteBirthday,
 } from '@/hooks/useBirthdays';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import AddBirthdayDialog from '@/components/AddBirthdayDialog';
 import EditBirthdayDialog from '@/components/EditBirthdayDialog';
@@ -29,7 +29,6 @@ export default function Dashboard() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
-  const { toast } = useToast();
   const del = useDeleteBirthday();
 
   return (
@@ -137,9 +136,9 @@ export default function Dashboard() {
             onConfirm={async () => {
               try {
                 await del.mutateAsync(selectedBirthday._id);
-                toast({ title: 'Deleted', description: `${selectedBirthday.name} removed` });
+                toast.success(`${selectedBirthday.name} removed`);
               } catch {
-                toast({ title: 'Error', description: 'Failed to delete' });
+                toast.error('Failed to delete');
               }
             }}
           />
@@ -184,7 +183,6 @@ function TodayList({
   onEdit: (birthday: Birthday) => void;
   onDelete: (birthday: Birthday) => void;
 }) {
-  const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useTodaysBirthdays();
   const sendWish = useSendWish();
 
@@ -219,6 +217,7 @@ function TodayList({
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {data.data.map((b) => {
+        // Recalculate on every render to catch backend updates
         const alreadySent = wasWishSentThisYear(b.lastWishSent);
         return (
           <li
@@ -260,10 +259,10 @@ function TodayList({
                 onClick={async () => {
                   try {
                     await sendWish.mutateAsync(b._id);
-                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                    toast.success(`Wished ${b.name} a happy birthday 🎉`);
                   } catch (error: any) {
                     const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+                    toast.error(errorMsg);
                   }
                 }}
                 className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -293,7 +292,6 @@ function ThisMonthList({
   onEdit: (birthday: Birthday) => void;
   onDelete: (birthday: Birthday) => void;
 }) {
-  const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useThisMonthsBirthdays();
   const sendWish = useSendWish();
 
@@ -336,6 +334,7 @@ function ThisMonthList({
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {sorted.map((b) => {
+        // Recalculate on every render to catch backend updates
         const alreadySent = wasWishSentThisYear(b.lastWishSent);
         return (
           <li
@@ -382,10 +381,10 @@ function ThisMonthList({
                 onClick={async () => {
                   try {
                     await sendWish.mutateAsync(b._id);
-                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                    toast.success(`Wished ${b.name} a happy birthday 🎉`);
                   } catch (error: any) {
                     const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+                    toast.error(errorMsg);
                   }
                 }}
                 className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -415,7 +414,6 @@ function BirthdayList({
   onEdit: (birthday: Birthday) => void;
   onDelete: (birthday: Birthday) => void;
 }) {
-  const { toast } = useToast();
   const { data, isLoading, isError, refetch } = useBirthdays();
   const sendWish = useSendWish();
 
@@ -450,7 +448,6 @@ function BirthdayList({
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {data.data.map((b) => {
-        const isTodayBirthday = isToday(b.date);
         const alreadySent = wasWishSentThisYear(b.lastWishSent);
         return (
           <li
@@ -484,10 +481,10 @@ function BirthdayList({
                 onClick={async () => {
                   try {
                     await sendWish.mutateAsync(b._id);
-                    toast({ title: 'Sent 🎉', description: `Wished ${b.name} a happy birthday` });
+                    toast.success(`Wished ${b.name} a happy birthday 🎉`);
                   } catch (error: any) {
                     const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                    toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+                    toast.error(errorMsg);
                   }
                 }}
                 className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -518,7 +515,6 @@ function CalendarView({
   onDelete: (birthday: Birthday) => void;
 }) {
   const { data, isLoading, isError, refetch } = useBirthdays();
-  const { toast } = useToast();
   const sendWish = useSendWish();
   const [selected, setSelected] = useState<Date | undefined>(new Date());
 
@@ -671,7 +667,6 @@ function CalendarView({
             <div className="max-h-[470px] overflow-y-auto">
               <ul className="divide-y-2 divide-border">
                 {selectedList.map((b) => {
-                  const isTodayBirthday = isToday(b.date);
                   const alreadySent = wasWishSentThisYear(b.lastWishSent);
                   return (
                     <li
@@ -705,17 +700,10 @@ function CalendarView({
                           onClick={async () => {
                             try {
                               await sendWish.mutateAsync(b._id);
-                              toast({
-                                title: 'Sent 🎉',
-                                description: `Wished ${b.name} a happy birthday`,
-                              });
+                              toast.success(`Wished ${b.name} a happy birthday 🎉`);
                             } catch (error: any) {
                               const errorMsg = error.response?.data?.error || 'Failed to send wish';
-                              toast({
-                                title: 'Error',
-                                description: errorMsg,
-                                variant: 'destructive',
-                              });
+                              toast.error(errorMsg);
                             }
                           }}
                           className={`font-medium ${alreadySent ? 'opacity-50 cursor-not-allowed' : ''}`}
