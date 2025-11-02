@@ -22,7 +22,6 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-// NEW: Accept open, onOpenChange, and birthday as props
 export default function EditBirthdayDialog({
   open,
   onOpenChange,

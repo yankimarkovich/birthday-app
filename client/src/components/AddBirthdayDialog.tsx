@@ -19,7 +19,6 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-// NEW: Accept open and onOpenChange as props (controlled component)
 export default function AddBirthdayDialog({
   open,
   onOpenChange,
@@ -50,7 +49,6 @@ export default function AddBirthdayDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* REMOVED: DialogTrigger - Dashboard will render the button */}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Birthday</DialogTitle>
