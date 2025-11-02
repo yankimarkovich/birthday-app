@@ -280,8 +280,10 @@ function TodayList({
                   try {
                     await sendWish.mutateAsync(b._id);
                     toast.success(`Wished ${b.name} a happy birthday 🎉`);
-                  } catch (error: any) {
-                    const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                  } catch (error) {
+                    const errorMsg =
+                      (error as { response?: { data?: { error?: string } } })?.response?.data
+                        ?.error || 'Failed to send wish';
                     toast.error(errorMsg);
                   }
                 }}
@@ -402,8 +404,10 @@ function ThisMonthList({
                   try {
                     await sendWish.mutateAsync(b._id);
                     toast.success(`Wished ${b.name} a happy birthday 🎉`);
-                  } catch (error: any) {
-                    const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                  } catch (error) {
+                    const errorMsg =
+                      (error as { response?: { data?: { error?: string } } })?.response?.data
+                        ?.error || 'Failed to send wish';
                     toast.error(errorMsg);
                   }
                 }}
@@ -502,8 +506,10 @@ function BirthdayList({
                   try {
                     await sendWish.mutateAsync(b._id);
                     toast.success(`Wished ${b.name} a happy birthday 🎉`);
-                  } catch (error: any) {
-                    const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                  } catch (error) {
+                    const errorMsg =
+                      (error as { response?: { data?: { error?: string } } })?.response?.data
+                        ?.error || 'Failed to send wish';
                     toast.error(errorMsg);
                   }
                 }}
@@ -721,8 +727,10 @@ function CalendarView({
                             try {
                               await sendWish.mutateAsync(b._id);
                               toast.success(`Wished ${b.name} a happy birthday 🎉`);
-                            } catch (error: any) {
-                              const errorMsg = error.response?.data?.error || 'Failed to send wish';
+                            } catch (error) {
+                              const errorMsg =
+                                (error as { response?: { data?: { error?: string } } })?.response?.data
+                                  ?.error || 'Failed to send wish';
                               toast.error(errorMsg);
                             }
                           }}
