@@ -1,4 +1,4 @@
-import { getYear, isSameDay, addYears, isBefore, differenceInMilliseconds } from 'date-fns';
+import { getYear, addYears, isBefore, differenceInMilliseconds } from 'date-fns';
 
 export function nextOccurrence(dateInput: string | Date, nowInput: Date = new Date()): Date {
   const source = new Date(dateInput);
@@ -33,7 +33,8 @@ export function getCountdownParts(target: Date, nowInput: Date = new Date()) {
 export function isToday(dateInput: string | Date, nowInput: Date = new Date()): boolean {
   const d = new Date(dateInput);
   const n = new Date(nowInput);
-  return isSameDay(d, n);
+  // Use manual comparison to avoid timezone issues with isSameDay
+  return d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
 }
 
 export function wasWishSentThisYear(lastWishSent: string | undefined): boolean {
