@@ -9,7 +9,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-// NEW: Accept open and onOpenChange as props
 export default function ConfirmDeleteDialog({
   open,
   onOpenChange,
@@ -31,7 +30,7 @@ export default function ConfirmDeleteDialog({
     try {
       setLoading(true);
       await onConfirm();
-      onOpenChange(false); // Close via prop
+      onOpenChange(false);
     } finally {
       setLoading(false);
     }
@@ -39,7 +38,6 @@ export default function ConfirmDeleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* REMOVED: DialogTrigger - Dashboard will render the button */}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

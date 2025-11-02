@@ -6,9 +6,9 @@ import { AuthContext } from './auth-context';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const queryClient = useQueryClient(); // ADD THIS LINE
+  const queryClient = useQueryClient();
 
-  // Check if user is logged in on mount
+  // Check if user is logged in on mount (dependency array is empty)
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
 
-    queryClient.clear(); // ✅ Keep this
+    queryClient.clear();
   };
 
   const logout = () => {
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
     setUser(null);
 
-    queryClient.clear(); // ✅ Keep this
+    queryClient.clear();
   };
 
   const value = {
