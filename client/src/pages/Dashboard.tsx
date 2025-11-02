@@ -448,8 +448,6 @@ function BirthdayList({
   return (
     <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
       {data.data.map((b) => {
-        const isTodayBirthday = isToday(b.date);
-        // Recalculate on every render to catch backend updates
         const alreadySent = wasWishSentThisYear(b.lastWishSent);
         return (
           <li
@@ -669,8 +667,6 @@ function CalendarView({
             <div className="max-h-[470px] overflow-y-auto">
               <ul className="divide-y-2 divide-border">
                 {selectedList.map((b) => {
-                  const isTodayBirthday = isToday(b.date);
-                  // Recalculate on every render to catch backend updates
                   const alreadySent = wasWishSentThisYear(b.lastWishSent);
                   return (
                     <li
