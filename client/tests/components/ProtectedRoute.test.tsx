@@ -22,7 +22,6 @@ describe('ProtectedRoute Component', () => {
       user: { id: '1', email: 'test@example.com', name: 'Test User' },
       login: vi.fn(),
       logout: vi.fn(),
-      register: vi.fn(),
     });
 
     render(
@@ -44,7 +43,6 @@ describe('ProtectedRoute Component', () => {
       user: null,
       login: vi.fn(),
       logout: vi.fn(),
-      register: vi.fn(),
     });
 
     render(
@@ -67,7 +65,6 @@ describe('ProtectedRoute Component', () => {
       user: null,
       login: vi.fn(),
       logout: vi.fn(),
-      register: vi.fn(),
     });
 
     render(
@@ -90,7 +87,6 @@ describe('ProtectedRoute Component', () => {
       user: null,
       login: vi.fn(),
       logout: vi.fn(),
-      register: vi.fn(),
     });
 
     render(
