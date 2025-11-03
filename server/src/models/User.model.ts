@@ -40,9 +40,10 @@ const userSchema = new Schema<IUser>(
 );
 
 // Hash password before saving
+// Pre-save hook: Runs BEFORE saving to database
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    return next();
+    return next(); // Password unchanged, skip hashing
   }
 
   try {

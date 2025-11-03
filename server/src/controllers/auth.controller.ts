@@ -20,7 +20,7 @@ export const register = async (req: Request, res: Response) => {
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      logger.error('JWT_SECRET is not defined');
+      (req.log || logger).error('JWT_SECRET is not defined');
       return res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -36,7 +36,6 @@ export const register = async (req: Request, res: Response) => {
       { expiresIn: '7d' }
     );
 
-    // Business event log with correlation id
     (req.log || logger).info(`Registration success: ${email}`);
 
     return res.status(201).json({
@@ -81,7 +80,7 @@ export const login = async (req: Request, res: Response) => {
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      logger.error('JWT_SECRET is not defined');
+      (req.log || logger).error('JWT_SECRET is not defined');
       return res.status(500).json({
         success: false,
         error: 'Internal server error',
