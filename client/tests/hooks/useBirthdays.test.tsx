@@ -10,7 +10,7 @@ import {
   useUpdateBirthday,
   useDeleteBirthday,
   useSendWish,
-} from './useBirthdays';
+} from '@/hooks/useBirthdays';
 import { api } from '@/lib/axios';
 
 // Mock axios

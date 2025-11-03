@@ -36,10 +36,10 @@ export default defineConfig({
     environment: 'happy-dom',
 
     // Setup file runs before each test file
-    setupFiles: './src/test/setup.ts',
+    setupFiles: './tests/setup.ts',
 
-    // Include test files
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Include test files (separate tests directory)
+    include: ['tests/**/*.{test,spec}.{ts,tsx}'],
 
     // Global test APIs (describe, it, expect) without imports
     globals: true,
@@ -50,7 +50,7 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
-        'src/test/',
+        'tests/',
         '**/*.d.ts',
         '**/*.config.*',
         '**/mockData',

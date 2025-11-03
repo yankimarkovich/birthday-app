@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { nextOccurrence, getCountdownParts, isToday, wasWishSentThisYear } from './date';
+import { nextOccurrence, getCountdownParts, isToday, wasWishSentThisYear } from '@/lib/date';
 
 describe('date utilities', () => {
   describe('nextOccurrence', () => {
