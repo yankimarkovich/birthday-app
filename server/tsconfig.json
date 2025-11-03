@@ -6,6 +6,7 @@
         "lib": [
             "ES2023"
         ],
+        "types": ["node", "jest"],
         /* Module Resolution */
         "moduleResolution": "node",
         "resolveJsonModule": true,
@@ -36,11 +37,11 @@
         "skipLibCheck": true
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "tests/**/*"
     ],
     "exclude": [
         "node_modules",
-        "dist",
-        "**/*.test.ts"
+        "dist"
     ]
 }
