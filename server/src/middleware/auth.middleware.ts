@@ -22,7 +22,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      logger.error('JWT_SECRET is not defined');
+      (req.log || logger).error('JWT_SECRET is not defined');
       return res.status(500).json({
         success: false,
         error: 'Internal server error',
@@ -52,7 +52,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       });
     }
 
-    logger.error('Auth middleware error:', error);
+    (req.log || logger).error('Auth middleware error:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
