@@ -2,8 +2,8 @@ import { useThisMonthsBirthdays } from '@/hooks/useBirthdays';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ErrorState';
+import { EmptyState } from '@/components/EmptyState';
 import { Countdown } from '@/components/Countdown';
 import { format } from 'date-fns';
 import { nextOccurrence, isToday } from '@/lib/date';
@@ -23,31 +23,11 @@ export function ThisMonthList({ onEdit, onDelete }: ThisMonthListProps) {
   }
 
   if (isError || !data) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription className="flex items-center justify-between">
-          <span className="text-base font-medium">Failed to load this month's birthdays.</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            className="ml-4"
-          >
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
-    );
+    return <ErrorState message="Failed to load this month's birthdays." onRetry={refetch} />;
   }
 
   if (data.count === 0) {
-    return (
-      <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
-        <CardContent className="p-12 text-center">
-          <p className="text-lg text-muted-foreground font-medium">No birthdays this month! 🎂</p>
-        </CardContent>
-      </Card>
-    );
+    return <EmptyState message="No birthdays this month! 🎂" />;
   }
 
   const enriched = data.data.map((b) => {

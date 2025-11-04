@@ -1,6 +1,5 @@
 import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDeleteBirthday } from '@/hooks/useBirthdays';
 import { toast } from 'sonner';
@@ -25,19 +24,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Card className="rounded-none border-x-0 border-t-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
-        <CardHeader className="container mx-auto px-6 py-5">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">🎂 Birthday App</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-base text-muted-foreground font-medium">{user?.name}</span>
-              <Button variant="outline" size="default" onClick={logout} className="font-medium">
-                Logout
-              </Button>
-            </div>
+      <header className="border-b bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
+        <div className="container mx-auto flex items-center justify-between px-6 py-5">
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">🎂 Birthday App</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-base text-muted-foreground font-medium">{user?.name}</span>
+            <Button variant="outline" size="default" onClick={logout} className="font-medium">
+              Logout
+            </Button>
           </div>
-        </CardHeader>
-      </Card>
+        </div>
+      </header>
 
       <main className="container mx-auto px-6 py-8 space-y-8">
         <div className="flex items-center justify-between">

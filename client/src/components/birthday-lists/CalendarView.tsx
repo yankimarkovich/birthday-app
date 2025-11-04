@@ -2,8 +2,8 @@ import { useBirthdays } from '@/hooks/useBirthdays';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { ErrorState } from '@/components/ErrorState';
+import { EmptyState } from '@/components/EmptyState';
 import { Separator } from '@/components/ui/separator';
 import { DayButton } from 'react-day-picker';
 import { format } from 'date-fns';
@@ -56,21 +56,7 @@ export function CalendarView({ onEdit, onDelete }: CalendarViewProps) {
   }
 
   if (isError || !data) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription className="flex items-center justify-between">
-          <span className="text-base font-medium">Failed to load birthdays.</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            className="ml-4"
-          >
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
-    );
+    return <ErrorState message="Failed to load birthdays." onRetry={refetch} />;
   }
 
   const modifiers = { hasBirthday: datesWithBirthdays } as const;
@@ -168,13 +154,7 @@ export function CalendarView({ onEdit, onDelete }: CalendarViewProps) {
         </Card>
 
         {selectedList.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-base text-muted-foreground font-medium">
-                No birthdays on this day 📅
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState message="No birthdays on this day 📅" />
         ) : (
           <Card>
             <CardContent className="p-0">
