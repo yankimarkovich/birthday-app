@@ -56,13 +56,13 @@ docker-compose up --build
 
 The project includes scripts to populate the database with test birthdays.
 
-### Option 1: Automatic Test Data (After Login)
+### Automatic Test Data (After Login)
 
 ```bash
 # Make sure server is running
 cd server/scripts
 
-# Create test data (requires test user to exist)
+# Create test data
 npm run createTestData
 OR
 node create-test-data.js
@@ -140,12 +140,6 @@ birthday-app/
 - **Winston** - Logging
 - **Swagger/OpenAPI** - API documentation
 
-### DevOps
-
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
-- **MongoDB 7.0** - Database container
-
 ---
 
 ## ✨ Features
@@ -159,7 +153,6 @@ birthday-app/
 - ✅ **Today's Birthdays** - Filter birthdays happening today
 - ✅ **This Month** - See birthdays in current month
 - ✅ **Birthday Wishes** - Send wishes (once per year)
-- ✅ **Responsive Design** - Works on mobile, tablet, desktop
 
 ### Technical Features
 
@@ -170,86 +163,8 @@ birthday-app/
 - ✅ **Error Handling** - Centralized error management
 - ✅ **Rate Limiting** - Protect against abuse
 - ✅ **Health Checks** - Docker container monitoring
-- ✅ **Hot Reload** - Fast development iteration
 
 ---
-
-## 📖 API Documentation
-
-Interactive API documentation is available at:
-
-**http://localhost:5000/docs**
-
-### Key Features
-
-- 🔍 Browse all API endpoints
-- 🧪 Test APIs directly in browser
-- 📝 See request/response schemas
-- 🔐 Authenticate with JWT token
-
-### API Endpoints Summary
-
-**Authentication:**
-
-```
-POST   /api/auth/register          - Create account
-POST   /api/auth/login             - Login
-```
-
-**Birthdays:**
-
-```
-GET    /api/birthdays              - Get all birthdays
-POST   /api/birthdays              - Create birthday
-GET    /api/birthdays/today        - Get today's birthdays
-GET    /api/birthdays/this-month   - Get this month's birthdays
-GET    /api/birthdays/:id          - Get birthday by ID
-PATCH  /api/birthdays/:id          - Update birthday
-DELETE /api/birthdays/:id          - Delete birthday
-POST   /api/birthdays/:id/wish     - Send birthday wish
-```
-
-**Health:**
-
-```
-GET    /health                     - Health check
-```
-
----
-
-## 👨‍💻 Development
-
-### Code Style
-
-- **Linting:** ESLint + TypeScript
-- **Formatting:** Prettier (auto-format on save)
-- **Git Hooks:** Pre-commit linting (optional)
-
-### Recommended VSCode Extensions
-
-- ESLint
-- Prettier
-- Tailwind CSS IntelliSense
-- MongoDB for VS Code
-- Docker
-
----
-
-## 🚀 Production Deployment
-
-### Build for Production
-
-```bash
-# Build frontend
-cd client
-npm run build
-# Creates client/dist/
-
-# Build backend
-cd server
-npm run build
-# Creates server/dist/
-```
 
 **Created by:** Yanki Markovich
 **Purpose:** Full Stack Developer Position Interview
