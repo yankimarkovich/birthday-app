@@ -11,20 +11,15 @@ interface TodayListProps {
 }
 
 export function TodayList({ onEdit, onDelete }: TodayListProps) {
-  // Use all birthdays and filter on client side to fix timezone bug
-  // Server uses UTC, but we want to use user's local timezone
   const { data: allData, isLoading, isError, refetch } = useBirthdays();
 
-  // Filter birthdays to only include today's (using client's timezone)
   const data = useMemo(() => {
     if (!allData) return null;
 
     const now = new Date();
     const todayBirthdays = allData.data.filter((b) => {
       const birthdayDate = new Date(b.date);
-      return (
-        birthdayDate.getMonth() === now.getMonth() && birthdayDate.getDate() === now.getDate()
-      );
+      return birthdayDate.getMonth() === now.getMonth() && birthdayDate.getDate() === now.getDate();
     });
 
     return {

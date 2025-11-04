@@ -1,14 +1,5 @@
 import { z } from 'zod';
 
-// ============================================================
-// PARAMETER SCHEMAS (URL parameter validation)
-// ============================================================
-
-/**
- * MongoDB ObjectId Schema
- * Validates MongoDB ObjectId format (24 hex characters)
- * Used for :id parameter in GET/PATCH/DELETE routes
- */
 export const mongoIdSchema = z.object({
   id: z
     .string()
@@ -16,14 +7,6 @@ export const mongoIdSchema = z.object({
     .trim(),
 });
 
-// ============================================================
-// INPUT SCHEMAS (Request validation)
-// ============================================================
-
-/**
- * Create Birthday Schema
- * POST /api/birthdays
- */
 export const createBirthdaySchema = z.object({
   name: z
     .string()
@@ -45,137 +28,54 @@ export const createBirthdaySchema = z.object({
   notes: z.string().max(500, 'Notes cannot exceed 500 characters').optional().or(z.literal('')),
 });
 
-/**
- * Update Birthday Schema
- * PATCH /api/birthdays/:id
- * Makes ALL fields optional only for the update
- * Note: lastWishSent is NOT updatable by users - only set by sendBirthdayWish endpoint
- */
 export const updateBirthdaySchema = createBirthdaySchema.partial();
 
-// ============================================================
-// RESPONSE SCHEMAS (API response types)
-// ============================================================
-
-/**
- * Birthday Object Schema
- * Single birthday as returned from database
- *
- * NEW: Added lastWishSent field (Task 4)
- * - Stores timestamp of when wish was last sent
- * - Optional because existing birthdays don't have it
- * - Used to prevent duplicate wishes in same year
- */
 export const birthdaySchema = z.object({
   _id: z.string(),
   userId: z.string(),
   name: z.string(),
-  date: z.date().or(z.string()), // Can be Date or ISO string
+  date: z.date().or(z.string()),
   email: z.string().optional(),
   phone: z.string().optional(),
   notes: z.string().optional(),
-  lastWishSent: z.date().or(z.string()).optional(), // NEW: When wish was last sent
+  lastWishSent: z.date().or(z.string()).optional(),
   createdAt: z.date().or(z.string()),
   updatedAt: z.date().or(z.string()),
 });
 
-/**
- * Get All Birthdays Response
- * GET /api/birthdays
- * GET /api/birthdays/today
- * GET /api/birthdays/this-month
- *
- * MATCHES YOUR CONTROLLER RESPONSE:
- * {
- *   success: true,
- *   count: 5,
- *   data: [...]
- * }
- */
 export const birthdaysListResponseSchema = z.object({
   success: z.literal(true),
   count: z.number(),
   data: z.array(birthdaySchema),
 });
 
-/**
- * Single Birthday Response
- * GET /api/birthdays/:id
- * POST /api/birthdays (create)
- * PATCH /api/birthdays/:id (update)
- *
- * MATCHES YOUR CONTROLLER RESPONSE:
- * {
- *   success: true,
- *   data: {...}
- * }
- */
 export const singleBirthdayResponseSchema = z.object({
   success: z.literal(true),
   data: birthdaySchema,
 });
 
-/**
- * Delete Birthday Response
- * DELETE /api/birthdays/:id
- *
- * MATCHES YOUR CONTROLLER RESPONSE:
- * {
- *   success: true,
- *   message: "Birthday deleted successfully"
- * }
- */
 export const deleteBirthdayResponseSchema = z.object({
   success: z.literal(true),
   message: z.string(),
 });
 
-/**
- * Send Birthday Wish Response - Success
- * POST /api/birthdays/:id/wish
- *
- * UPDATED (Task 4): Now includes sentAt timestamp
- * {
- *   success: true,
- *   message: "Birthday wish sent successfully",
- *   sentAt: "2025-11-01T14:30:00.000Z"
- * }
- */
 export const sendWishResponseSchema = z.object({
   success: z.literal(true),
   message: z.string(),
-  sentAt: z.date().or(z.string()), // NEW: Timestamp when wish was sent
+  sentAt: z.date().or(z.string()),
 });
 
-/**
- * Send Birthday Wish Response - Duplicate Error
- * POST /api/birthdays/:id/wish (when already sent this year)
- *
- * NEW (Task 4): Error response when wish already sent this year
- * {
- *   success: false,
- *   error: "Birthday wish already sent this year",
- *   lastSent: "2025-11-01T14:30:00.000Z"
- * }
- */
 export const sendWishDuplicateErrorSchema = z.object({
   success: z.literal(false),
   error: z.string(),
-  lastSent: z.date().or(z.string()), // When wish was previously sent
+  lastSent: z.date().or(z.string()),
 });
 
-// ============================================================
-// TYPESCRIPT TYPES
-// ============================================================
+// TYPESCRIPT TYPES Generated from Zod Schema
 
-// Parameter types
 export type MongoIdParam = z.infer<typeof mongoIdSchema>;
-
-// Input types
 export type CreateBirthdayInput = z.infer<typeof createBirthdaySchema>;
 export type UpdateBirthdayInput = z.infer<typeof updateBirthdaySchema>;
-
-// Response types
 export type Birthday = z.infer<typeof birthdaySchema>;
 export type BirthdaysListResponse = z.infer<typeof birthdaysListResponseSchema>;
 export type SingleBirthdayResponse = z.infer<typeof singleBirthdayResponseSchema>;

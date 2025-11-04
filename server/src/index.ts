@@ -35,7 +35,7 @@ app.use(requestIdMiddleware);
 
 // Basic API rate limiting
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
@@ -62,7 +62,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDoc));
 app.use('/api/auth', authRoutes);
 app.use('/api/birthdays', birthdayRoutes);
 
-// Centralized error handler (must come after routes)
+// Centralized error handler
 app.use(errorHandler);
 
 // Start server function

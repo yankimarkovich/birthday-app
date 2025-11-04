@@ -55,7 +55,7 @@ const birthdaySchema = new Schema<IBirthday>(
 );
 
 // Compound index for efficient queries
-// We filter by userId first in all queries
+// We filter by userId first in all queries, and then by date
 birthdaySchema.index({ userId: 1, date: 1 });
 
 export const Birthday = mongoose.model<IBirthday>('Birthday', birthdaySchema);

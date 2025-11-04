@@ -61,12 +61,14 @@ export interface LoginFormData {
   password: string;
 }
 
+//Register new Account
 export interface RegisterFormData {
   name: string;
   email: string;
   password: string;
 }
 
+//Dialog Form Type
 export interface BirthdayFormData {
   name: string;
   date: string;
