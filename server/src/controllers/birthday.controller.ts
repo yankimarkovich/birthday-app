@@ -39,6 +39,7 @@ export const createBirthday = async (req: Request, res: Response) => {
   }
 };
 
+// Get all user birthdays
 export const getBirthdays = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -68,11 +69,7 @@ export const getBirthdays = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Get birthdays happening today
- * Filters by month and day only (ignores year since birthdays repeat annually)
- * Uses MongoDB aggregation operators for efficient server-side filtering
- */
+//Get birthdays happening today
 export const getTodaysBirthdays = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -86,12 +83,6 @@ export const getTodaysBirthdays = async (req: Request, res: Response) => {
     const currentMonth = today.getMonth() + 1; // MongoDB months are 1-indexed (1-12)
     const currentDay = today.getDate(); // Day of month (1-31)
 
-    // Query explanation:
-    // - $expr allows us to use aggregation operators in find()
-    // - $month extracts month number from date field (1-12)
-    // - $dayOfMonth extracts day number from date field (1-31)
-    // - We match ONLY month and day, ignoring year (birthdays repeat annually)
-    // - userId filter ensures user only sees their own birthdays
     const birthdays = await Birthday.find({
       userId: req.user.userId,
       $expr: {
@@ -120,11 +111,7 @@ export const getTodaysBirthdays = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Get birthdays happening this month
- * Filters by month only (ignores day and year)
- * Useful for "This Month" tab to show upcoming birthdays
- */
+//Get birthdays happening this month
 export const getThisMonthsBirthdays = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -137,11 +124,6 @@ export const getThisMonthsBirthdays = async (req: Request, res: Response) => {
     const today = new Date();
     const currentMonth = today.getMonth() + 1; // MongoDB months are 1-indexed (1-12)
 
-    // Query explanation:
-    // - $expr with $month extracts month from date field
-    // - We match ONLY the month, allowing all days and years
-    // - This returns all birthdays that happen in the current month
-    // - Sort by day within month for chronological display
     const birthdays = await Birthday.find({
       userId: req.user.userId,
       $expr: {
@@ -288,11 +270,7 @@ export const deleteBirthday = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * Send birthday wish
- * Validates that wish hasn't been sent this year, then saves timestamp
- * Business rule: One wish per birthday per year
- */
+//Send birthday wish
 export const sendBirthdayWish = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -327,7 +305,6 @@ export const sendBirthdayWish = async (req: Request, res: Response) => {
     birthday.lastWishSent = new Date();
     await birthday.save();
 
-    // Server-side log of the wish action (core assignment requirement)
     (req.log || logger).info(
       `Happy Birthday sent to ${birthday.name} (id=${id}) by ${req.user.email} at ${birthday.lastWishSent.toISOString()}`
     );

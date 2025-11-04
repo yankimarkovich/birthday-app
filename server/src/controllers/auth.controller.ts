@@ -33,7 +33,7 @@ export const register = async (req: Request, res: Response) => {
         email: user.email,
       },
       secret,
-      { expiresIn: '7d' }
+      { expiresIn: '1h' }
     );
 
     (req.log || logger).info(`Registration success: ${email}`);
