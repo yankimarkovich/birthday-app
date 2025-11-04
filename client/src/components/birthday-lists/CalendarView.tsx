@@ -1,6 +1,10 @@
 import { useBirthdays } from '@/hooks/useBirthdays';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { DayButton } from 'react-day-picker';
 import { format } from 'date-fns';
 import React, { useMemo, useState } from 'react';
@@ -53,15 +57,19 @@ export function CalendarView({ onEdit, onDelete }: CalendarViewProps) {
 
   if (isError || !data) {
     return (
-      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
-        <p className="text-base font-medium">Failed to load birthdays.</p>
-        <button
-          className="underline text-base mt-2 hover:text-destructive/80"
-          onClick={() => refetch()}
-        >
-          Retry
-        </button>
-      </div>
+      <Alert variant="destructive">
+        <AlertDescription className="flex items-center justify-between">
+          <span className="text-base font-medium">Failed to load birthdays.</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="ml-4"
+          >
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -75,8 +83,8 @@ export function CalendarView({ onEdit, onDelete }: CalendarViewProps) {
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-start">
-      <div className="bg-card border-2 border-border rounded-xl shadow-lg overflow-hidden lg:sticky lg:top-8">
-        <div className="p-6">
+      <Card className="lg:sticky lg:top-8">
+        <CardContent className="p-6">
           <Calendar
             mode="single"
             selected={selected}
@@ -141,35 +149,44 @@ export function CalendarView({ onEdit, onDelete }: CalendarViewProps) {
               },
             }}
           />
-        </div>
-        <div className="text-sm text-muted-foreground px-6 pb-5 text-center font-medium border-t border-border pt-4 bg-muted/20">
-          Days with birthdays are highlighted in purple 💜
-        </div>
-      </div>
+        </CardContent>
+        <Separator />
+        <CardContent className="py-4 text-center">
+          <p className="text-sm text-muted-foreground font-medium">
+            Days with birthdays are highlighted in purple 💜
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="space-y-4">
-        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-2 border-border rounded-xl p-6 shadow-lg">
-          <h3 className="text-xl font-bold text-foreground">
-            {selected ? format(selected, 'PPPP') : 'Select a day'}
-          </h3>
-        </div>
+        <Card className="bg-gradient-to-r from-primary/10 to-accent/10">
+          <CardContent className="p-6">
+            <h3 className="text-xl font-bold text-foreground">
+              {selected ? format(selected, 'PPPP') : 'Select a day'}
+            </h3>
+          </CardContent>
+        </Card>
 
         {selectedList.length === 0 ? (
-          <div className="bg-card border-2 border-border rounded-xl p-8 text-center shadow-lg">
-            <p className="text-base text-muted-foreground font-medium">
-              No birthdays on this day 📅
-            </p>
-          </div>
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-base text-muted-foreground font-medium">
+                No birthdays on this day 📅
+              </p>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="bg-card border-2 border-border rounded-xl shadow-lg overflow-hidden">
-            <div className="max-h-[470px] overflow-y-auto">
-              <ul className="divide-y-2 divide-border">
-                {selectedList.map((b) => (
-                  <BirthdayListItem key={b._id} birthday={b} onEdit={onEdit} onDelete={onDelete} />
-                ))}
-              </ul>
-            </div>
-          </div>
+          <Card>
+            <CardContent className="p-0">
+              <div className="max-h-[470px] overflow-y-auto">
+                <ul className="divide-y-2 divide-border">
+                  {selectedList.map((b) => (
+                    <BirthdayListItem key={b._id} birthday={b} onEdit={onEdit} onDelete={onDelete} />
+                  ))}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

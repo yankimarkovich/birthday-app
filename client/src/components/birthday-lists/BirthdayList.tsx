@@ -1,5 +1,8 @@
 import { useBirthdays } from '@/hooks/useBirthdays';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { BirthdayListItem } from './BirthdayListItem';
 import type { Birthday } from '@/types';
 
@@ -17,33 +20,43 @@ export function BirthdayList({ onEdit, onDelete }: BirthdayListProps) {
 
   if (isError || !data) {
     return (
-      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
-        <p className="text-base font-medium">Failed to load birthdays.</p>
-        <button
-          className="underline text-base mt-2 hover:text-destructive/80"
-          onClick={() => refetch()}
-        >
-          Retry
-        </button>
-      </div>
+      <Alert variant="destructive">
+        <AlertDescription className="flex items-center justify-between">
+          <span className="text-base font-medium">Failed to load birthdays.</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            className="ml-4"
+          >
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
   if (data.count === 0) {
     return (
-      <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
-        <p className="text-lg text-muted-foreground font-medium">
-          No birthdays yet. Add some to get started! 🎉
-        </p>
-      </div>
+      <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
+        <CardContent className="p-12 text-center">
+          <p className="text-lg text-muted-foreground font-medium">
+            No birthdays yet. Add some to get started! 🎉
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
-      {data.data.map((b) => (
-        <BirthdayListItem key={b._id} birthday={b} onEdit={onEdit} onDelete={onDelete} />
-      ))}
-    </ul>
+    <Card>
+      <CardContent className="p-0">
+        <ul className="divide-y-2 divide-border">
+          {data.data.map((b) => (
+            <BirthdayListItem key={b._id} birthday={b} onEdit={onEdit} onDelete={onDelete} />
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
