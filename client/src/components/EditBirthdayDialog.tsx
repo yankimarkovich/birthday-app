@@ -56,7 +56,7 @@ export default function EditBirthdayDialog({
     try {
       await updateBirthday.mutateAsync({ id: birthday._id, payload: values });
       toast.success(`Saved changes for ${values.name}`);
-      onOpenChange(false); // Close via prop
+      onOpenChange(false);
     } catch {
       toast.error('Failed to update birthday');
     }

@@ -36,7 +36,6 @@ export const register = async (req: Request, res: Response) => {
       { expiresIn: '7d' }
     );
 
-    // Business event log with correlation id
     (req.log || logger).info(`Registration success: ${email}`);
 
     return res.status(201).json({

@@ -15,10 +15,8 @@ export function requestIdMiddleware(req: Request, res: Response, next: NextFunct
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
-    // Log one access line per request in dev (http level)
     req.log?.http(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`);
   });
 
   next();
 }
-

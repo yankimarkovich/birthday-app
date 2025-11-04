@@ -8,7 +8,7 @@ const router = Router();
 
 // Tighter rate limit for login to mitigate brute force
 const loginLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,

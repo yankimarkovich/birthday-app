@@ -6,7 +6,7 @@ export function nextOccurrence(dateInput: string | Date, nowInput: Date = new Da
 
   const targetThisYear = new Date(now.getFullYear(), source.getMonth(), source.getDate());
   if (isNaN(targetThisYear.getTime())) {
-    return source; // fallback
+    return source;
   }
 
   if (isBefore(targetThisYear, now)) {
@@ -33,7 +33,6 @@ export function getCountdownParts(target: Date, nowInput: Date = new Date()) {
 export function isToday(dateInput: string | Date, nowInput: Date = new Date()): boolean {
   const d = new Date(dateInput);
   const n = new Date(nowInput);
-  // Use manual comparison to avoid timezone issues with isSameDay
   return d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
 }
 

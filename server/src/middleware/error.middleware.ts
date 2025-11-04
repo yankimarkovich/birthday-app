@@ -3,11 +3,9 @@ import { logger } from '../utils/logger';
 
 export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction) {
   const isDev = (process.env.NODE_ENV || 'development') === 'development';
-  const child = req.log || logger;
   const message = err instanceof Error ? err.stack || err.message : String(err);
 
-  // Centralized error logging with request-scoped logger
-  child.error(message);
+  (req.log || logger).error(message);
 
   const body: Record<string, unknown> = {
     success: false,

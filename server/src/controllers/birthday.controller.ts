@@ -82,7 +82,6 @@ export const getTodaysBirthdays = async (req: Request, res: Response) => {
       });
     }
 
-    // Get current date in server timezone (TODO: use user timezone from Task 6)
     const today = new Date();
     const currentMonth = today.getMonth() + 1; // MongoDB months are 1-indexed (1-12)
     const currentDay = today.getDate(); // Day of month (1-31)
@@ -135,7 +134,6 @@ export const getThisMonthsBirthdays = async (req: Request, res: Response) => {
       });
     }
 
-    // Get current month in server timezone (TODO: use user timezone from Task 6)
     const today = new Date();
     const currentMonth = today.getMonth() + 1; // MongoDB months are 1-indexed (1-12)
 
@@ -308,16 +306,12 @@ export const sendBirthdayWish = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, error: 'Birthday not found' });
     }
 
-    // SERVER-SIDE VALIDATION: Check if wish already sent this year
-    // Why check on server: Client validation can be bypassed
-    // Why compare years: Birthdays repeat annually
     const currentYear = new Date().getFullYear();
 
     if (birthday.lastWishSent) {
       const lastSentYear = new Date(birthday.lastWishSent).getFullYear();
 
       if (lastSentYear === currentYear) {
-        // Already sent this year - reject the request
         (req.log || logger).warn(
           `Duplicate wish attempt for ${birthday.name} (id=${id}) by ${req.user.email} - already sent on ${birthday.lastWishSent.toISOString()}`
         );
@@ -330,8 +324,6 @@ export const sendBirthdayWish = async (req: Request, res: Response) => {
       }
     }
 
-    // Update lastWishSent timestamp
-    // This persists the wish action to database
     birthday.lastWishSent = new Date();
     await birthday.save();
 

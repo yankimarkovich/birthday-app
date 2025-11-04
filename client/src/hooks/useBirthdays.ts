@@ -19,7 +19,6 @@ const queryKeys = {
 /**
  * Fetch all birthdays (no filtering)
  * Used by: "All" tab and Calendar view
- * Note: Should be lazy-loaded (use enabled option in component)
  */
 export function useBirthdays() {
   return useQuery({
@@ -35,7 +34,6 @@ export function useBirthdays() {
  * Fetch today's birthdays only
  * Used by: "Today" tab (default view)
  * Server filters by month+day, ignoring year
- * This is typically 2-5 records - very fast!
  */
 export function useTodaysBirthdays() {
   return useQuery({
@@ -51,7 +49,6 @@ export function useTodaysBirthdays() {
  * Fetch this month's birthdays
  * Used by: "This Month" tab
  * Server filters by month only, ignoring day and year
- * This is typically 10-20 records - good for planning ahead
  */
 export function useThisMonthsBirthdays() {
   return useQuery({
@@ -88,8 +85,8 @@ export function useUpdateBirthday() {
       return data;
     },
     onSuccess: (_data, vars) => {
-      // Invalidate all birthday queries since the update might affect any view
-      // Example: Changing date might move birthday from "today" to another day
+      // Invalidate all birthday-related queries to refetch fresh data
+      // This ensures all tabs show the newly created birthday
       qc.invalidateQueries({ queryKey: queryKeys.birthdays });
       qc.invalidateQueries({ queryKey: queryKeys.todaysBirthdays });
       qc.invalidateQueries({ queryKey: queryKeys.monthBirthdays });
@@ -122,8 +119,7 @@ export function useSendWish() {
       return data as { success: true; message: string };
     },
     onSuccess: () => {
-      // ✅ CRITICAL FIX: Invalidate all birthday queries to refetch updated lastWishSent
-      // Without this, the button won't update until manual page refresh
+      // Invalidate all birthday queries to refetch updated lastWishSent
       qc.invalidateQueries({ queryKey: queryKeys.birthdays });
       qc.invalidateQueries({ queryKey: queryKeys.todaysBirthdays });
       qc.invalidateQueries({ queryKey: queryKeys.monthBirthdays });

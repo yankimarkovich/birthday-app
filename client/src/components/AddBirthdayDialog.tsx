@@ -40,7 +40,7 @@ export default function AddBirthdayDialog({
       await createBirthday.mutateAsync(values);
       toast.success(`Created birthday for ${values.name}`);
       reset();
-      onOpenChange(false); // Close via prop
+      onOpenChange(false);
     } catch {
       toast.error('Failed to create birthday');
     }
