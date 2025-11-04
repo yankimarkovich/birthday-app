@@ -1,6 +1,9 @@
 import { useBirthdays } from '@/hooks/useBirthdays';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { ErrorState } from '@/components/ErrorState';
+import { EmptyState } from '@/components/EmptyState';
 import { useMemo } from 'react';
 import { BirthdayListItem } from './BirthdayListItem';
 import type { Birthday } from '@/types';
@@ -34,45 +37,33 @@ export function TodayList({ onEdit, onDelete }: TodayListProps) {
   }
 
   if (isError || !data) {
-    return (
-      <div className="bg-card border-2 border-destructive/20 rounded-xl p-8 text-destructive shadow-lg">
-        <p className="text-base font-medium">Failed to load today's birthdays.</p>
-        <button
-          className="underline text-base mt-2 hover:text-destructive/80"
-          onClick={() => refetch()}
-        >
-          Retry
-        </button>
-      </div>
-    );
+    return <ErrorState message="Failed to load today's birthdays." onRetry={refetch} />;
   }
 
   if (data.count === 0) {
-    return (
-      <div className="bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-border rounded-xl p-12 text-center shadow-lg">
-        <p className="text-lg text-muted-foreground font-medium">
-          No birthdays today! 🎂 Check back tomorrow.
-        </p>
-      </div>
-    );
+    return <EmptyState message="No birthdays today! 🎂 Check back tomorrow." />;
   }
 
   return (
-    <ul className="bg-card border-2 border-border rounded-xl divide-y-2 divide-border shadow-lg overflow-hidden">
-      {data.data.map((b) => (
-        <BirthdayListItem
-          key={b._id}
-          birthday={b}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          badge={
-            <Badge variant="default" className="bg-accent text-accent-foreground text-sm px-3 py-1">
-              Today! 🎉
-            </Badge>
-          }
-          dateFormat="MMM d, yyyy"
-        />
-      ))}
-    </ul>
+    <Card>
+      <CardContent className="p-0">
+        <ul className="divide-y-2 divide-border">
+          {data.data.map((b) => (
+            <BirthdayListItem
+              key={b._id}
+              birthday={b}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              badge={
+                <Badge variant="default" className="bg-accent text-accent-foreground text-sm px-3 py-1">
+                  Today! 🎉
+                </Badge>
+              }
+              dateFormat="MMM d, yyyy"
+            />
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }

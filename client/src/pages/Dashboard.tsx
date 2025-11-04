@@ -1,5 +1,6 @@
 import { useAuth } from '@/context/useAuth';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useDeleteBirthday } from '@/hooks/useBirthdays';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -23,7 +24,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
+      <header className="border-b bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5">
         <div className="container mx-auto flex items-center justify-between px-6 py-5">
           <h1 className="text-2xl font-bold text-foreground tracking-tight">🎂 Birthday App</h1>
           <div className="flex items-center gap-4">
@@ -37,12 +38,27 @@ export default function Dashboard() {
 
       <main className="container mx-auto px-6 py-8 space-y-8">
         <div className="flex items-center justify-between">
-          <div className="inline-flex items-center rounded-xl border-2 border-border bg-card p-1.5 shadow-sm">
-            <Toggle value="today" current={view} onChange={setView} label="Today" />
-            <Toggle value="month" current={view} onChange={setView} label="This Month" />
-            <Toggle value="calendar" current={view} onChange={setView} label="Calendar" />
-            <Toggle value="all" current={view} onChange={setView} label="All" />
-          </div>
+          <ToggleGroup
+            type="single"
+            value={view}
+            onValueChange={(value) => {
+              if (value) setView(value as 'today' | 'month' | 'calendar' | 'all');
+            }}
+            className="inline-flex items-center rounded-xl border-2 border-border bg-card p-1.5 shadow-sm"
+          >
+            <ToggleGroupItem value="today" className="px-5 py-2.5 text-base font-medium rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-md data-[state=on]:scale-105">
+              Today
+            </ToggleGroupItem>
+            <ToggleGroupItem value="month" className="px-5 py-2.5 text-base font-medium rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-md data-[state=on]:scale-105">
+              This Month
+            </ToggleGroupItem>
+            <ToggleGroupItem value="calendar" className="px-5 py-2.5 text-base font-medium rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-md data-[state=on]:scale-105">
+              Calendar
+            </ToggleGroupItem>
+            <ToggleGroupItem value="all" className="px-5 py-2.5 text-base font-medium rounded-lg data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-md data-[state=on]:scale-105">
+              All
+            </ToggleGroupItem>
+          </ToggleGroup>
           <Button onClick={() => setAddDialogOpen(true)} className="font-medium" size="default">
             Add Birthday
           </Button>
@@ -135,33 +151,5 @@ export default function Dashboard() {
         </>
       )}
     </div>
-  );
-}
-
-function Toggle({
-  value,
-  current,
-  onChange,
-  label,
-}: {
-  value: 'today' | 'month' | 'calendar' | 'all';
-  current: string;
-  onChange: (v: 'today' | 'month' | 'calendar' | 'all') => void;
-  label: string;
-}) {
-  const active = current === value;
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(value)}
-      aria-pressed={active}
-      className={`px-5 py-2.5 text-base font-medium rounded-lg transition-all duration-200 ${
-        active
-          ? 'bg-primary text-primary-foreground shadow-md scale-105'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-      }`}
-    >
-      {label}
-    </button>
   );
 }
