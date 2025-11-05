@@ -68,11 +68,8 @@ export function useCreateBirthday() {
       return data;
     },
     onSuccess: () => {
-      // Invalidate all birthday-related queries to refetch fresh data
-      // This ensures all tabs show the newly created birthday
+      // This single invalidation covers ALL birthday queries! 🎉
       qc.invalidateQueries({ queryKey: queryKeys.birthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.todaysBirthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.monthBirthdays });
     },
   });
 }
@@ -84,13 +81,9 @@ export function useUpdateBirthday() {
       const { data } = await api.patch<SingleBirthdayResponse>(`/birthdays/${id}`, payload);
       return data;
     },
-    onSuccess: (_data, vars) => {
-      // Invalidate all birthday-related queries to refetch fresh data
-      // This ensures all tabs show the newly created birthday
+    onSuccess: () => {
+      // This single invalidation covers ALL birthday queries! 🎉
       qc.invalidateQueries({ queryKey: queryKeys.birthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.todaysBirthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.monthBirthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.birthday(vars.id) });
     },
   });
 }
@@ -103,10 +96,8 @@ export function useDeleteBirthday() {
       return data;
     },
     onSuccess: () => {
-      // Invalidate all birthday queries to remove deleted birthday from all views
+      // This single invalidation covers ALL birthday queries! 🎉
       qc.invalidateQueries({ queryKey: queryKeys.birthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.todaysBirthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.monthBirthdays });
     },
   });
 }
@@ -119,10 +110,8 @@ export function useSendWish() {
       return data as { success: true; message: string };
     },
     onSuccess: () => {
-      // Invalidate all birthday queries to refetch updated lastWishSent
+      // This single invalidation covers ALL birthday queries! 🎉
       qc.invalidateQueries({ queryKey: queryKeys.birthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.todaysBirthdays });
-      qc.invalidateQueries({ queryKey: queryKeys.monthBirthdays });
     },
   });
 }
