@@ -7,7 +7,15 @@ import type { AuthResponse } from '@/types';
 import { Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import AuthLayout from '@/components/AuthLayout';
 
 const loginSchema = z.object({
   email: z.string().trim().email(),
@@ -22,12 +30,13 @@ export default function Login() {
   const location = useLocation() as { state?: { from?: Location } };
   const from = location.state?.from?.pathname || '/';
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-  } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  const form = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
 
   const onSubmit = async (values: LoginForm) => {
     try {
@@ -36,7 +45,7 @@ export default function Login() {
       navigate(from, { replace: true });
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { error?: string } } })?.response?.data?.error || 'Login failed';
-      setError('root', { message });
+      form.setError('root', { message });
     }
   };
 
@@ -45,26 +54,43 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center p-4">
-      <div className="w-full max-w-md bg-card border border-border rounded-lg p-6">
-        <h1 className="text-2xl font-semibold mb-6 text-foreground">Login</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
-            {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
-          </div>
+    <AuthLayout title="Login">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="you@example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="••••••••" {...register('password')} />
-            {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
-          </div>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="••••••••" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          {errors.root && <p className="text-sm text-red-500">{errors.root.message}</p>}
+          {form.formState.errors.root && (
+            <FormMessage>{form.formState.errors.root.message}</FormMessage>
+          )}
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in…' : 'Sign in'}
+          <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Signing in…' : 'Sign in'}
           </Button>
 
           <p className="text-sm text-muted-foreground text-center">
@@ -74,7 +100,7 @@ export default function Login() {
             </Link>
           </p>
         </form>
-      </div>
-    </div>
+      </Form>
+    </AuthLayout>
   );
 }
