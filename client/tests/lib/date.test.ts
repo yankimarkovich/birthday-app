@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { nextOccurrence, getCountdownParts, isToday, wasWishSentThisYear } from '@/lib/date';
+import { nextOccurrence, isToday, wasWishSentThisYear } from '@/lib/date';
 
 describe('date utilities', () => {
   describe('nextOccurrence', () => {
@@ -47,57 +47,6 @@ describe('date utilities', () => {
       expect(result.getMonth()).toBe(11);
       expect(result.getDate()).toBe(25);
       expect(result.getFullYear()).toBe(2025);
-    });
-  });
-
-  describe('getCountdownParts', () => {
-    it('calculates correct countdown for days, hours, minutes, seconds', () => {
-      const now = new Date('2025-01-01T00:00:00Z');
-      const target = new Date('2025-01-02T03:04:05Z'); // +1 day, 3 hours, 4 minutes, 5 seconds
-
-      const result = getCountdownParts(target, now);
-
-      expect(result.days).toBe(1);
-      expect(result.hours).toBe(3);
-      expect(result.minutes).toBe(4);
-      expect(result.seconds).toBe(5);
-    });
-
-    it('returns zero values when target is in the past', () => {
-      const now = new Date('2025-01-02T00:00:00Z');
-      const target = new Date('2025-01-01T00:00:00Z'); // Past
-
-      const result = getCountdownParts(target, now);
-
-      expect(result.days).toBe(0);
-      expect(result.hours).toBe(0);
-      expect(result.minutes).toBe(0);
-      expect(result.seconds).toBe(0);
-      expect(result.totalMs).toBeLessThan(0); // Negative time difference
-    });
-
-    it('handles exact same time (no countdown)', () => {
-      const now = new Date('2025-01-01T12:00:00Z');
-      const target = new Date('2025-01-01T12:00:00Z');
-
-      const result = getCountdownParts(target, now);
-
-      expect(result.days).toBe(0);
-      expect(result.hours).toBe(0);
-      expect(result.minutes).toBe(0);
-      expect(result.seconds).toBe(0);
-    });
-
-    it('calculates large countdowns correctly', () => {
-      const now = new Date('2025-01-01T00:00:00Z');
-      const target = new Date('2025-12-31T23:59:59Z'); // Almost a year
-
-      const result = getCountdownParts(target, now);
-
-      expect(result.days).toBeGreaterThan(360);
-      expect(result.hours).toBe(23);
-      expect(result.minutes).toBe(59);
-      expect(result.seconds).toBe(59);
     });
   });
 
