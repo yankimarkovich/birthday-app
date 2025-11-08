@@ -1,4 +1,4 @@
-import { getYear, addYears, isBefore, differenceInMilliseconds } from 'date-fns';
+import { getYear, addYears, isBefore } from 'date-fns';
 
 export function nextOccurrence(dateInput: string | Date, nowInput: Date = new Date()): Date {
   const source = new Date(dateInput);
@@ -13,21 +13,6 @@ export function nextOccurrence(dateInput: string | Date, nowInput: Date = new Da
     return addYears(targetThisYear, 1);
   }
   return targetThisYear;
-}
-
-export function getCountdownParts(target: Date, nowInput: Date = new Date()) {
-  const now = new Date(nowInput);
-  let delta = Math.max(0, differenceInMilliseconds(target, now));
-
-  const days = Math.floor(delta / (24 * 60 * 60 * 1000));
-  delta -= days * 24 * 60 * 60 * 1000;
-  const hours = Math.floor(delta / (60 * 60 * 1000));
-  delta -= hours * 60 * 60 * 1000;
-  const minutes = Math.floor(delta / (60 * 1000));
-  delta -= minutes * 60 * 1000;
-  const seconds = Math.floor(delta / 1000);
-
-  return { days, hours, minutes, seconds, totalMs: differenceInMilliseconds(target, now) };
 }
 
 export function isToday(dateInput: string | Date, nowInput: Date = new Date()): boolean {

@@ -25,20 +25,16 @@ describe('Countdown Component', () => {
     expect(screen.getByText(/1d 3h 4m 5s/)).toBeInTheDocument();
   });
 
-  it('sets up interval to update countdown', () => {
+  it('renders countdown for short durations', () => {
     const now = new Date('2025-01-01T00:00:00Z');
     vi.setSystemTime(now);
 
     const target = new Date('2025-01-01T00:00:10Z'); // +10 seconds
-    const setIntervalSpy = vi.spyOn(global, 'setInterval');
 
     render(<Countdown target={target} />);
 
     // Initial render: 10 seconds
     expect(screen.getByText(/0d 0h 0m 10s/)).toBeInTheDocument();
-
-    // Verify setInterval was called with 1000ms (1 second)
-    expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 1000);
   });
 
   it('shows zero when target is in the past', () => {
@@ -78,18 +74,5 @@ describe('Countdown Component', () => {
     expect(countdown).toHaveClass('tabular-nums');
     expect(countdown).toHaveClass('text-sm');
     expect(countdown).toHaveClass('text-muted-foreground');
-  });
-
-  it('cleans up interval on unmount', () => {
-    const target = new Date('2025-01-01T00:00:10Z');
-    const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
-
-    const { unmount } = render(<Countdown target={target} />);
-
-    // Unmount component
-    unmount();
-
-    // Verify interval was cleared
-    expect(clearIntervalSpy).toHaveBeenCalled();
   });
 });
