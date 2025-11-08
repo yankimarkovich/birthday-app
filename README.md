@@ -12,8 +12,6 @@ A full-stack birthday management application built with React, TypeScript, Expre
 - [Project Structure](#-project-structure)
 - [Tech Stack](#-tech-stack)
 - [Features](#-features)
-- [API Documentation](#-api-documentation)
-- [Development](#-development)
 
 ---
 
@@ -176,3 +174,4 @@ birthday-app/
 
 **Created by:** Yanki Markovich
 **Last Updated:** 2025-11-08
+
