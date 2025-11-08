@@ -308,9 +308,7 @@ describe('Birthday Controller', () => {
         { _id: '2', name: 'Birthday 2', date: new Date(), userId: 'user-123' },
       ];
 
-      (Birthday.find as jest.Mock).mockReturnValue({
-        sort: jest.fn().mockResolvedValue(mockBirthdays),
-      });
+      (Birthday.find as jest.Mock).mockResolvedValue(mockBirthdays);
 
       // Act: Get this month's birthdays
       const response = await request(app).get('/birthdays/this-month').expect(200);
@@ -323,9 +321,7 @@ describe('Birthday Controller', () => {
 
     it('should filter by month only (ignore day and year)', async () => {
       // Arrange
-      (Birthday.find as jest.Mock).mockReturnValue({
-        sort: jest.fn().mockResolvedValue([]),
-      });
+      (Birthday.find as jest.Mock).mockResolvedValue([]);
 
       // Act: Get this month's birthdays
       await request(app).get('/birthdays/this-month').expect(200);
