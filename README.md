@@ -70,8 +70,8 @@ node create-test-data.js
 # This creates:
 # - Test user to login with: Email: test@example.com,  Password: Test123!
 # - 50 random birthdays throughout the year
-# - 10 birthdays TODAY (for testing "Today" tab)
-# - 5 special dates with multiple birthdays each
+# - Random birthdays for the current month
+# - Special dates with multiple birthdays each
 ```
 
 ## 📁 Project Structure
@@ -82,12 +82,14 @@ birthday-app/
 │   ├── src/
 │   │   ├── components/              # React components
 │   │   │   ├── ui/                  # shadcn/ui components
+│   │   │   ├── birthday-lists/      # Birthday list components
 │   │   │   └── features/            # Feature components
 │   │   ├── pages/                   # Page components
 │   │   ├── hooks/                   # Custom React hooks
 │   │   ├── lib/                     # Utilities & axios
 │   │   ├── types/                   # TypeScript types
 │   │   └── App.tsx
+│   ├── tests/                       # Test files
 │   ├── Dockerfile.dev
 │   └── package.json
 │
@@ -109,6 +111,7 @@ birthday-app/
 │
 ├── docker-compose.yml               # Docker orchestration
 ├── DESIGN.md                        # Design decisions
+├── QUERY_PERFORMANCE_AUDIT.md       # Query performance analysis
 └── README.md                        # This file
 ```
 
@@ -127,6 +130,8 @@ birthday-app/
 - **Axios** - HTTP client
 - **React Router** - Routing
 - **date-fns** - Date manipulation
+- **react-countdown** - Real-time countdown timers
+- **Vitest** - Unit testing framework
 
 ### Backend
 
@@ -151,7 +156,8 @@ birthday-app/
 - ✅ **Dashboard View** - See all your birthdays
 - ✅ **Calendar View** - Visual calendar of birthdays
 - ✅ **Today's Birthdays** - Filter birthdays happening today
-- ✅ **This Month** - See birthdays in current month
+- ✅ **This Month** - See birthdays sorted by proximity to today
+- ✅ **Real-time Countdown** - Live countdown to upcoming birthdays
 - ✅ **Birthday Wishes** - Send wishes (once per year)
 
 ### Technical Features
@@ -163,9 +169,10 @@ birthday-app/
 - ✅ **Error Handling** - Centralized error management
 - ✅ **Rate Limiting** - Protect against abuse
 - ✅ **Health Checks** - Docker container monitoring
+- ✅ **Performance Optimized** - Compound indexes and efficient queries
+- ✅ **Comprehensive Testing** - Unit tests with Vitest
 
 ---
 
 **Created by:** Yanki Markovich
-**Purpose:** Full Stack Developer Position Interview
-**Last Updated:** 2025-11-03
+**Last Updated:** 2025-11-08
