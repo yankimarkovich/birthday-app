@@ -123,22 +123,36 @@ export const getThisMonthsBirthdays = async (req: Request, res: Response) => {
 
     const today = new Date();
     const currentMonth = today.getMonth() + 1; // MongoDB months are 1-indexed (1-12)
+    const currentDay = today.getDate();
 
+    // Fetch birthdays for current month
     const birthdays = await Birthday.find({
       userId: req.user.userId,
       $expr: {
         $eq: [{ $month: '$date' }, currentMonth],
       },
-    }).sort({ date: 1 });
+    });
+
+    // Sort by proximity to today in JavaScript
+    const sorted = birthdays.sort((a, b) => {
+      const dayA = new Date(a.date).getDate();
+      const dayB = new Date(b.date).getDate();
+
+      // Calculate sort order: today=0, tomorrow=1, past days=100+
+      const orderA = dayA >= currentDay ? dayA - currentDay : 100 + dayA;
+      const orderB = dayB >= currentDay ? dayB - currentDay : 100 + dayB;
+
+      return orderA - orderB;
+    });
 
     (req.log || logger).info(
-      `Found ${birthdays.length} birthdays this month (month ${currentMonth}) for user ${req.user.email}`
+      `Found ${sorted.length} birthdays this month (month ${currentMonth}) for user ${req.user.email}`
     );
 
     return res.status(200).json({
       success: true,
-      count: birthdays.length,
-      data: birthdays,
+      count: sorted.length,
+      data: sorted,
     });
   } catch (error) {
     (req.log || logger).error(`Get this month's birthdays failure: ${(error as Error).message}`);
