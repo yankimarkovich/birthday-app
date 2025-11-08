@@ -118,14 +118,14 @@ function randomEmail(name) {
 }
 
 function randomDate() {
-  const year = 2000;
+  const year = Math.floor(Math.random() * 46) + 1980;
   const month = Math.floor(Math.random() * 12);
   const day = Math.floor(Math.random() * 28) + 1;
   return new Date(year, month, day);
 }
 
 function specificDate(month, day) {
-  return new Date(2000, month, day);
+  return new Date(Math.floor(Math.random() * 46) + 1980, month, day);
 }
 
 function formatDate(date) {
