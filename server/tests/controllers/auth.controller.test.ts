@@ -66,10 +66,7 @@ describe('Auth Controller', () => {
       (User as unknown as jest.Mock).mockImplementation(() => mockUser);
 
       // Act: Make register request
-      const response = await request(app)
-        .post('/register')
-        .send(validRegisterData)
-        .expect(201);
+      const response = await request(app).post('/register').send(validRegisterData).expect(201);
 
       // Assert: Response should include token and user
       expect(response.body.success).toBe(true);
@@ -94,10 +91,7 @@ describe('Auth Controller', () => {
       });
 
       // Act: Attempt to register with existing email
-      const response = await request(app)
-        .post('/register')
-        .send(validRegisterData)
-        .expect(409);
+      const response = await request(app).post('/register').send(validRegisterData).expect(409);
 
       // Assert: Should return error
       expect(response.body.success).toBe(false);
@@ -122,10 +116,7 @@ describe('Auth Controller', () => {
       (User as unknown as jest.Mock).mockImplementation(() => mockUser);
 
       // Act: Attempt to register
-      const response = await request(app)
-        .post('/register')
-        .send(validRegisterData)
-        .expect(500);
+      const response = await request(app).post('/register').send(validRegisterData).expect(500);
 
       // Assert: Should return internal error
       expect(response.body.success).toBe(false);
@@ -137,10 +128,7 @@ describe('Auth Controller', () => {
       (User.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       // Act: Attempt to register
-      const response = await request(app)
-        .post('/register')
-        .send(validRegisterData)
-        .expect(500);
+      const response = await request(app).post('/register').send(validRegisterData).expect(500);
 
       // Assert: Should return internal error
       expect(response.body.success).toBe(false);
@@ -159,10 +147,7 @@ describe('Auth Controller', () => {
       (User as unknown as jest.Mock).mockImplementation(() => mockUser);
 
       // Act: Attempt to register
-      const response = await request(app)
-        .post('/register')
-        .send(validRegisterData)
-        .expect(500);
+      const response = await request(app).post('/register').send(validRegisterData).expect(500);
 
       // Assert: Should return internal error
       expect(response.body.success).toBe(false);
@@ -181,18 +166,15 @@ describe('Auth Controller', () => {
       (User as unknown as jest.Mock).mockImplementation(() => mockUser);
 
       // Act: Register
-      const response = await request(app)
-        .post('/register')
-        .send(validRegisterData)
-        .expect(201);
+      const response = await request(app).post('/register').send(validRegisterData).expect(201);
 
-      // Assert: Token should have 7 day expiration
+      // Assert: Token should have 1 hour expiration
       const decoded = jwt.verify(response.body.token, validSecret) as any;
       const tokenExp = decoded.exp;
       const tokenIat = decoded.iat;
-      const daysDiff = (tokenExp - tokenIat) / (60 * 60 * 24);
+      const hoursDiff = (tokenExp - tokenIat) / (60 * 60);
 
-      expect(daysDiff).toBeCloseTo(7, 1);
+      expect(hoursDiff).toBeCloseTo(1, 1);
     });
   });
 
@@ -216,10 +198,7 @@ describe('Auth Controller', () => {
       });
 
       // Act: Login request
-      const response = await request(app)
-        .post('/login')
-        .send(validLoginData)
-        .expect(200);
+      const response = await request(app).post('/login').send(validLoginData).expect(200);
 
       // Assert: Should return token and user
       expect(response.body.success).toBe(true);
@@ -243,10 +222,7 @@ describe('Auth Controller', () => {
       });
 
       // Act: Login with non-existent email
-      const response = await request(app)
-        .post('/login')
-        .send(validLoginData)
-        .expect(401);
+      const response = await request(app).post('/login').send(validLoginData).expect(401);
 
       // Assert: Should return invalid credentials
       expect(response.body.success).toBe(false);
@@ -265,10 +241,7 @@ describe('Auth Controller', () => {
       });
 
       // Act: Login with wrong password
-      const response = await request(app)
-        .post('/login')
-        .send(validLoginData)
-        .expect(401);
+      const response = await request(app).post('/login').send(validLoginData).expect(401);
 
       // Assert: Should return invalid credentials
       expect(response.body.success).toBe(false);
@@ -293,10 +266,7 @@ describe('Auth Controller', () => {
       });
 
       // Act: Attempt to login
-      const response = await request(app)
-        .post('/login')
-        .send(validLoginData)
-        .expect(500);
+      const response = await request(app).post('/login').send(validLoginData).expect(500);
 
       // Assert: Should return internal error
       expect(response.body.success).toBe(false);
@@ -310,10 +280,7 @@ describe('Auth Controller', () => {
       });
 
       // Act: Attempt to login
-      const response = await request(app)
-        .post('/login')
-        .send(validLoginData)
-        .expect(500);
+      const response = await request(app).post('/login').send(validLoginData).expect(500);
 
       // Assert: Should return internal error
       expect(response.body.success).toBe(false);
@@ -330,10 +297,7 @@ describe('Auth Controller', () => {
       (User.findOne as jest.Mock).mockReturnValue({ select: selectMock });
 
       // Act: Login
-      await request(app)
-        .post('/login')
-        .send(validLoginData)
-        .expect(200);
+      await request(app).post('/login').send(validLoginData).expect(200);
 
       // Assert: Should call select with '+password'
       /**
@@ -358,10 +322,7 @@ describe('Auth Controller', () => {
       });
 
       // Act: Login
-      const response = await request(app)
-        .post('/login')
-        .send(validLoginData)
-        .expect(200);
+      const response = await request(app).post('/login').send(validLoginData).expect(200);
 
       // Assert: Response should NOT include password
       expect(response.body.user.password).toBeUndefined();
@@ -386,13 +347,11 @@ describe('Auth Controller', () => {
       (User as unknown as jest.Mock).mockImplementation(() => mockUser);
 
       // Act: Register
-      const response = await request(app)
-        .post('/register')
-        .send({
-          name: 'John',
-          email: 'john@example.com',
-          password: 'Pass123',
-        });
+      const response = await request(app).post('/register').send({
+        name: 'John',
+        email: 'john@example.com',
+        password: 'Pass123',
+      });
 
       // Assert: Should be JSON
       expect(response.headers['content-type']).toMatch(/json/);
@@ -404,13 +363,11 @@ describe('Auth Controller', () => {
       (User.findOne as jest.Mock).mockResolvedValue({ email: 'exists@example.com' });
 
       // Act: Register with existing email
-      const response = await request(app)
-        .post('/register')
-        .send({
-          name: 'John',
-          email: 'exists@example.com',
-          password: 'Pass123',
-        });
+      const response = await request(app).post('/register').send({
+        name: 'John',
+        email: 'exists@example.com',
+        password: 'Pass123',
+      });
 
       // Assert: Should include error message
       expect(response.body.success).toBe(false);

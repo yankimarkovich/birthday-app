@@ -88,10 +88,7 @@ describe('Birthday Controller', () => {
       (Birthday as unknown as jest.Mock).mockImplementation(() => mockBirthday);
 
       // Act: Create birthday
-      const response = await request(app)
-        .post('/birthdays')
-        .send(validBirthdayData)
-        .expect(201);
+      const response = await request(app).post('/birthdays').send(validBirthdayData).expect(201);
 
       // Assert: Response should include created birthday
       expect(response.body.success).toBe(true);
@@ -128,10 +125,7 @@ describe('Birthday Controller', () => {
       });
 
       // Act: Create birthday
-      await request(app)
-        .post('/birthdays')
-        .send(validBirthdayData)
-        .expect(201);
+      await request(app).post('/birthdays').send(validBirthdayData).expect(201);
 
       // Assert: Should use authenticated user's ID
       expect(capturedUserId).toBe('user-123');
@@ -145,10 +139,7 @@ describe('Birthday Controller', () => {
       (Birthday as unknown as jest.Mock).mockImplementation(() => mockBirthday);
 
       // Act: Attempt to create
-      const response = await request(app)
-        .post('/birthdays')
-        .send(validBirthdayData)
-        .expect(500);
+      const response = await request(app).post('/birthdays').send(validBirthdayData).expect(500);
 
       // Assert: Should return internal error
       expect(response.body.success).toBe(false);
@@ -169,10 +160,7 @@ describe('Birthday Controller', () => {
       (Birthday as unknown as jest.Mock).mockImplementation(() => mockBirthday);
 
       // Act: Create with minimal data
-      const response = await request(app)
-        .post('/birthdays')
-        .send(minimalData)
-        .expect(201);
+      const response = await request(app).post('/birthdays').send(minimalData).expect(201);
 
       // Assert: Should succeed
       expect(response.body.success).toBe(true);
@@ -192,9 +180,7 @@ describe('Birthday Controller', () => {
       });
 
       // Act: Get birthdays
-      const response = await request(app)
-        .get('/birthdays')
-        .expect(200);
+      const response = await request(app).get('/birthdays').expect(200);
 
       // Assert: Should return birthdays
       expect(response.body.success).toBe(true);
@@ -212,9 +198,7 @@ describe('Birthday Controller', () => {
       });
 
       // Act: Get birthdays
-      const response = await request(app)
-        .get('/birthdays')
-        .expect(200);
+      const response = await request(app).get('/birthdays').expect(200);
 
       // Assert: Should return empty array
       expect(response.body.success).toBe(true);
@@ -229,9 +213,7 @@ describe('Birthday Controller', () => {
       unauthApp.get('/birthdays', removeUser, getBirthdays);
 
       // Act: Try without auth
-      const response = await request(unauthApp)
-        .get('/birthdays')
-        .expect(401);
+      const response = await request(unauthApp).get('/birthdays').expect(401);
 
       // Assert: Should return unauthorized
       expect(response.body.success).toBe(false);
@@ -244,9 +226,7 @@ describe('Birthday Controller', () => {
       (Birthday.find as jest.Mock).mockReturnValue({ sort: sortMock });
 
       // Act: Get birthdays
-      await request(app)
-        .get('/birthdays')
-        .expect(200);
+      await request(app).get('/birthdays').expect(200);
 
       // Assert: Should sort by date ascending
       expect(sortMock).toHaveBeenCalledWith({ date: 1 });
@@ -259,9 +239,7 @@ describe('Birthday Controller', () => {
       });
 
       // Act: Get birthdays
-      const response = await request(app)
-        .get('/birthdays')
-        .expect(500);
+      const response = await request(app).get('/birthdays').expect(500);
 
       // Assert: Should return internal error
       expect(response.body.success).toBe(false);
@@ -269,22 +247,18 @@ describe('Birthday Controller', () => {
     });
   });
 
-  describe('GET /birthdays/today - Get Today\'s Birthdays', () => {
-    it('should return birthdays matching today\'s date', async () => {
+  describe("GET /birthdays/today - Get Today's Birthdays", () => {
+    it("should return birthdays matching today's date", async () => {
       // Arrange: Mock birthdays for today
       const today = new Date();
-      const mockBirthdays = [
-        { _id: '1', name: 'Birthday Today', date: today },
-      ];
+      const mockBirthdays = [{ _id: '1', name: 'Birthday Today', date: today }];
 
       (Birthday.find as jest.Mock).mockReturnValue({
         sort: jest.fn().mockResolvedValue(mockBirthdays),
       });
 
       // Act: Get today's birthdays
-      const response = await request(app)
-        .get('/birthdays/today')
-        .expect(200);
+      const response = await request(app).get('/birthdays/today').expect(200);
 
       // Assert: Should return today's birthdays
       expect(response.body.success).toBe(true);
@@ -304,9 +278,7 @@ describe('Birthday Controller', () => {
       });
 
       // Act: Get today's birthdays
-      await request(app)
-        .get('/birthdays/today')
-        .expect(200);
+      await request(app).get('/birthdays/today').expect(200);
 
       // Assert: Query should use $month and $dayOfMonth operators
       const findCall = (Birthday.find as jest.Mock).mock.calls[0][0];
@@ -321,21 +293,19 @@ describe('Birthday Controller', () => {
       appUnauth.get('/birthdays/today', removeUser, getTodaysBirthdays);
 
       // Act: Try without auth
-      const response = await request(appUnauth)
-        .get('/birthdays/today')
-        .expect(401);
+      const response = await request(appUnauth).get('/birthdays/today').expect(401);
 
       // Assert: Should return unauthorized
       expect(response.body.success).toBe(false);
     });
   });
 
-  describe('GET /birthdays/this-month - Get This Month\'s Birthdays', () => {
+  describe("GET /birthdays/this-month - Get This Month's Birthdays", () => {
     it('should return birthdays in current month', async () => {
       // Arrange: Mock birthdays for this month
       const mockBirthdays = [
-        { _id: '1', name: 'Birthday 1', date: new Date() },
-        { _id: '2', name: 'Birthday 2', date: new Date() },
+        { _id: '1', name: 'Birthday 1', date: new Date(), userId: 'user-123' },
+        { _id: '2', name: 'Birthday 2', date: new Date(), userId: 'user-123' },
       ];
 
       (Birthday.find as jest.Mock).mockReturnValue({
@@ -343,9 +313,7 @@ describe('Birthday Controller', () => {
       });
 
       // Act: Get this month's birthdays
-      const response = await request(app)
-        .get('/birthdays/this-month')
-        .expect(200);
+      const response = await request(app).get('/birthdays/this-month').expect(200);
 
       // Assert: Should return birthdays
       expect(response.body.success).toBe(true);
@@ -360,9 +328,7 @@ describe('Birthday Controller', () => {
       });
 
       // Act: Get this month's birthdays
-      await request(app)
-        .get('/birthdays/this-month')
-        .expect(200);
+      await request(app).get('/birthdays/this-month').expect(200);
 
       // Assert: Query should use $month operator
       const findCall = (Birthday.find as jest.Mock).mock.calls[0][0];
@@ -384,9 +350,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(mockBirthday);
 
       // Act: Get birthday
-      const response = await request(app)
-        .get('/birthdays/birthday-123')
-        .expect(200);
+      const response = await request(app).get('/birthdays/birthday-123').expect(200);
 
       // Assert: Should return birthday
       expect(response.body.success).toBe(true);
@@ -399,9 +363,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(null);
 
       // Act: Get non-existent birthday
-      const response = await request(app)
-        .get('/birthdays/non-existent-id')
-        .expect(404);
+      const response = await request(app).get('/birthdays/non-existent-id').expect(404);
 
       // Assert: Should return not found
       expect(response.body.success).toBe(false);
@@ -413,9 +375,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue({ _id: '123' });
 
       // Act: Get birthday
-      await request(app)
-        .get('/birthdays/123')
-        .expect(200);
+      await request(app).get('/birthdays/123').expect(200);
 
       // Assert: Query should filter by userId
       expect(Birthday.findOne).toHaveBeenCalledWith({
@@ -429,9 +389,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockRejectedValue(new Error('Database error'));
 
       // Act: Get birthday
-      const response = await request(app)
-        .get('/birthdays/123')
-        .expect(500);
+      const response = await request(app).get('/birthdays/123').expect(500);
 
       // Assert: Should return internal error
       expect(response.body.success).toBe(false);
@@ -458,10 +416,7 @@ describe('Birthday Controller', () => {
       };
 
       // Act: Update birthday
-      const response = await request(app)
-        .put('/birthdays/birthday-123')
-        .send(updates)
-        .expect(200);
+      const response = await request(app).put('/birthdays/birthday-123').send(updates).expect(200);
 
       // Assert: Should return updated birthday
       expect(response.body.success).toBe(true);
@@ -501,10 +456,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(mockBirthday);
 
       // Act: Update only one field
-      await request(app)
-        .put('/birthdays/123')
-        .send({ notes: 'Updated notes only' })
-        .expect(200);
+      await request(app).put('/birthdays/123').send({ notes: 'Updated notes only' }).expect(200);
 
       // Assert: Only notes should change
       expect(mockBirthday.notes).toBe('Updated notes only');
@@ -517,10 +469,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(null);
 
       // Act: Update birthday
-      await request(app)
-        .put('/birthdays/123')
-        .send({ name: 'New Name' })
-        .expect(404);
+      await request(app).put('/birthdays/123').send({ name: 'New Name' }).expect(404);
 
       // Assert: Query should filter by userId
       expect(Birthday.findOne).toHaveBeenCalledWith({
@@ -541,9 +490,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOneAndDelete as jest.Mock).mockResolvedValue(mockBirthday);
 
       // Act: Delete birthday
-      const response = await request(app)
-        .delete('/birthdays/birthday-123')
-        .expect(200);
+      const response = await request(app).delete('/birthdays/birthday-123').expect(200);
 
       // Assert: Should return success message
       expect(response.body.success).toBe(true);
@@ -555,9 +502,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOneAndDelete as jest.Mock).mockResolvedValue(null);
 
       // Act: Delete non-existent birthday
-      const response = await request(app)
-        .delete('/birthdays/non-existent')
-        .expect(404);
+      const response = await request(app).delete('/birthdays/non-existent').expect(404);
 
       // Assert: Should return not found
       expect(response.body.success).toBe(false);
@@ -569,9 +514,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOneAndDelete as jest.Mock).mockResolvedValue(null);
 
       // Act: Delete birthday
-      await request(app)
-        .delete('/birthdays/123')
-        .expect(404);
+      await request(app).delete('/birthdays/123').expect(404);
 
       // Assert: Query should filter by userId
       expect(Birthday.findOneAndDelete).toHaveBeenCalledWith({
@@ -595,9 +538,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(mockBirthday);
 
       // Act: Send wish
-      const response = await request(app)
-        .post('/birthdays/birthday-123/wish')
-        .expect(200);
+      const response = await request(app).post('/birthdays/birthday-123/wish').expect(200);
 
       // Assert: Should succeed
       expect(response.body.success).toBe(true);
@@ -620,9 +561,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(mockBirthday);
 
       // Act: Try to send wish again
-      const response = await request(app)
-        .post('/birthdays/birthday-123/wish')
-        .expect(400);
+      const response = await request(app).post('/birthdays/birthday-123/wish').expect(400);
 
       // Assert: Should reject
       expect(response.body.success).toBe(false);
@@ -647,9 +586,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(mockBirthday);
 
       // Act: Send wish this year
-      const response = await request(app)
-        .post('/birthdays/birthday-123/wish')
-        .expect(200);
+      const response = await request(app).post('/birthdays/birthday-123/wish').expect(200);
 
       // Assert: Should succeed
       expect(response.body.success).toBe(true);
@@ -666,9 +603,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(null);
 
       // Act: Send wish to non-existent birthday
-      const response = await request(app)
-        .post('/birthdays/non-existent/wish')
-        .expect(404);
+      const response = await request(app).post('/birthdays/non-existent/wish').expect(404);
 
       // Assert: Should return not found
       expect(response.body.success).toBe(false);
@@ -680,9 +615,7 @@ describe('Birthday Controller', () => {
       (Birthday.findOne as jest.Mock).mockResolvedValue(null);
 
       // Act: Send wish
-      await request(app)
-        .post('/birthdays/123/wish')
-        .expect(404);
+      await request(app).post('/birthdays/123/wish').expect(404);
 
       // Assert: Query should filter by userId
       expect(Birthday.findOne).toHaveBeenCalledWith({
