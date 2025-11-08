@@ -60,12 +60,16 @@ export function ThisMonthList({ onEdit, onDelete }: ThisMonthListProps) {
                 ) : undefined
               }
               dateInfo={
-                <>
-                  {format(new Date(b.date), 'MMM d')} •{' '}
-                  <span className="font-bold text-foreground">
-                    <Countdown target={b.next} />
-                  </span>
-                </>
+                b.isTodayBirthday ? (
+                  <span>{format(new Date(b.date), 'MMM d')}</span>
+                ) : (
+                  <>
+                    {format(new Date(b.date), 'MMM d')} •{' '}
+                    <span className="font-bold text-foreground">
+                      <Countdown target={b.next} />
+                    </span>
+                  </>
+                )
               }
             />
           ))}
