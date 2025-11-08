@@ -401,6 +401,10 @@ describe('Birthday Controller', () => {
         userId: 'user-123',
         name: 'Old Name',
         date: new Date('1990-01-01'),
+        email: undefined, // ← Add optional fields
+        phone: undefined, // ← Add optional fields
+        notes: undefined, // ← Add optional fields
+        lastWishSent: undefined, // ← Add optional fields
         save: jest.fn().mockResolvedValue(true),
       };
 
